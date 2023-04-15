@@ -1,0 +1,19 @@
+{
+  "name": "mailverse",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/creelonestudios/mailverse.git"
+  },
+  "author": "creelonestudios",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/creelonestudios/mailverse/issues"
+  },
+  "homepage": "https://github.com/creelonestudios/mailverse#readme"
+}
