@@ -15,5 +15,6 @@
   "bugs": {
     "url": "https://github.com/creelonestudios/mailverse/issues"
   },
-  "homepage": "https://github.com/creelonestudios/mailverse#readme"
+  "homepage": "https://github.com/creelonestudios/mailverse#readme",
+  "type": "module"
 }
