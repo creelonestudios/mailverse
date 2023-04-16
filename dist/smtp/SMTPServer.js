@@ -1,6 +1,9 @@
 import net from "net";
 import { writeFileSync, mkdirSync } from "fs";
 import getConfig from "../config.js";
+import User from "../models/User.js";
+import { smtpserver } from "../main.js";
+import crypto from "node:crypto";
 export default class SMTPServer {
     server;
     constructor(port) {
@@ -27,6 +30,7 @@ export default class SMTPServer {
                 info.content += msg;
                 if (msg.endsWith(".\r\n")) {
                     receivingData = false;
+                    info.content = info.content.replace(".\r\n", "");
                     sock.write("250 OK\r\n");
                     console.log("[SMTP] No longer receiving data -----------------------------------");
                     return;
@@ -57,7 +61,7 @@ export default class SMTPServer {
                 sock.write("354 Start mail input; end with <CRLF>.<CRLF>\r\n");
             }
             else if (msg.startsWith("QUIT")) {
-                this.handleNewMail(info);
+                await smtpserver.handleNewMail(info);
                 sock.write("221 Bye\r\n");
                 sock.end();
             }
@@ -69,7 +73,7 @@ export default class SMTPServer {
             console.log("[SMTP] Client disconnected");
         });
     }
-    handleNewMail(info) {
+    async handleNewMail(info) {
         const id = crypto.randomUUID();
         mkdirSync(`mails/`, { recursive: true });
         writeFileSync(`mails/${id}.txt`, info.content);
@@ -89,7 +93,21 @@ export default class SMTPServer {
         // Mail is not from this server
         if (!info.to.every(email => email.endsWith("@" + serverName))) {
             console.error("[SMTP] Not all recipients are from this server. Will NOT forward mail to other servers.");
-            return;
+        }
+        const recipients = info.to.filter(email => email.endsWith("@" + serverName));
+        for (const rec of recipients) {
+            console.log("[SMTP] Forwarding mail to " + rec);
+            const user = await User.findOne({ where: { username: rec.split("@")[0] } });
+            if (!user) {
+                console.error("[SMTP] User " + rec + " does not exist.");
+                continue;
+            }
+            await user.$create("mail", {
+                from: info.from,
+                to: rec,
+                content: id
+            });
+            console.log("[SMTP] Forwarded mail to " + rec);
         }
     }
 }
