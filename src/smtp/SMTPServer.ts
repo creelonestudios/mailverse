@@ -35,7 +35,8 @@ export default class SMTPServer {
 				info.content += msg
 				if(msg.endsWith(".\r\n")) {
 					receivingData = false;
-					info.content = info.content.replace(".\r\n", "")
+					info.content = info.content.substring(0, info.content.length - 3).replaceAll("\r\n", "\n")
+					await smtpserver.handleNewMail(info)
 					sock.write("250 OK\r\n")
 					console.log("[SMTP] No longer receiving data -----------------------------------")
 					return
@@ -62,7 +63,6 @@ export default class SMTPServer {
 				console.log("[SMTP] Now receiving data -----------------------------------")
 				sock.write("354 Start mail input; end with <CRLF>.<CRLF>\r\n")
 			} else if(msg.startsWith("QUIT")) {
-				await smtpserver.handleNewMail(info)
 				sock.write("221 Bye\r\n")
 				sock.end()
 			} else {
