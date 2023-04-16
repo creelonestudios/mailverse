@@ -35,7 +35,7 @@ export default class SMTPServer {
 				info.content += msg
 				if(msg.endsWith(".\r\n")) {
 					receivingData = false;
-					info.content = info.content.substring(0, info.content.length - 3)
+					info.content = info.content.substring(0, info.content.length - 3).replaceAll("\r\n", "\n")
 					await smtpserver.handleNewMail(info)
 					sock.write("250 OK\r\n")
 					console.log("[SMTP] No longer receiving data -----------------------------------")
