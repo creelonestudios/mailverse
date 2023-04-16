@@ -27,7 +27,7 @@ export default class POP3Server {
 			if(msg.startsWith("CAPA")) { // list capabilities
 				sock.write("+OK Capability list follows\r\nUSER\r\n.\r\n")
 			} else if(msg.startsWith("USER")) { // client gives username
-				username = msg.split(" ")[1].trim()
+				username = msg.split(" ")[1].trim().toLowerCase()
 				let _user = await User.findOne({ where: { username: username } })
 				if(!_user) {
 					sock.write("-ERR Invalid username or password\r\n")
