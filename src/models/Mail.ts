@@ -29,9 +29,9 @@ export default class Mail extends Model {
 	@Column(DataTypes.STRING)
 	declare content: string
 	
-  @ForeignKey(() => User)
-  declare userUuid: string;
-
+	@ForeignKey(() => User)
+	declare userUuid: string;
+	
 	@BelongsTo(() => User)
 	declare user: User;
 
