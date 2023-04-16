@@ -76,7 +76,7 @@ export default class POP3Server {
 				// sock.write("-ERR Not implemented\r\n")
 				const mails = await user.$get("mails")
 				for(let i = 0; i < mails.length; i++) {
-					sock.write((i + 1) + " " + mails[i].id + "\r\n")
+					sock.write((i + 1) + " " + mails[i].uuid + "\r\n")
 				}
 				sock.write(".\r\n")
 			} else if(msg.startsWith("DELE")) {
