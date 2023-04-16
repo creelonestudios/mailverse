@@ -8,5 +8,5 @@ export default class SMTPServer {
         from: string;
         to: string[];
         content: string;
-    }): void;
+    }): Promise<void>;
 }

@@ -16,5 +16,13 @@
     "url": "https://github.com/creelonestudios/mailverse/issues"
   },
   "homepage": "https://github.com/creelonestudios/mailverse#readme",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "mariadb": "^3.1.1",
+    "sequelize": "^6.31.0",
+    "sequelize-typescript": "^2.1.5"
+  },
+  "devDependencies": {
+    "@types/node": "^18.15.11"
+  }
 }
