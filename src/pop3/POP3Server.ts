@@ -3,6 +3,7 @@ import { readdirSync, readFileSync } from "fs"
 import User from "../models/User.js"
 import { createHash } from "node:crypto"
 import { readFile } from "fs/promises"
+import Mail from "../models/Mail.js"
 
 export default class POP3Server {
 
@@ -21,6 +22,7 @@ export default class POP3Server {
 		sock.write("+OK POP3 server ready\r\n")
 		let username = ""
 		let user: User;
+		let markedForDeletion = [] as Mail[]
 		sock.on("data", async (data: Buffer) => {
 			const msg = data.toString()
 			console.log("[POP3] Received data: " + msg)
@@ -72,6 +74,14 @@ export default class POP3Server {
 				const mail = mails[index]
 				const content = await readFile("mails/" + mail.content + ".txt", "utf-8")
 				sock.write("+OK\r\n" + content + "\r\n.\r\n");
+			} else if(msg.startsWith("TOP")) {
+				const mails = await user.$get("mails")
+				const index = parseInt(msg.split(" ")[1].trim()) - 1
+				const mail = mails[index]
+				const content = await readFile("mails/" + mail.content + ".txt", "utf-8")
+				const lines = content.split("\r\n")
+				const top = lines.slice(0, 10).join("\r\n")
+				sock.write("+OK\r\n" + top + "\r\n.\r\n");
 			} else if(msg.startsWith("UIDL")) { // get unique id of message
 				// sock.write("-ERR Not implemented\r\n")
 				const mails = await user.$get("mails")
@@ -80,6 +90,17 @@ export default class POP3Server {
 				}
 				sock.write(".\r\n")
 			} else if(msg.startsWith("DELE")) {
+				const mails = await user.$get("mails")
+				const index = parseInt(msg.split(" ")[1].trim()) - 1
+				const mail = mails[index]
+				await mail.destroy()
+				sock.write("+OK\r\n")
+			} else if(msg.startsWith("NOOP")) { // this is used to keep the connection alive
+				sock.write("+OK\r\n")
+			} else if(msg.startsWith("RSET")) {
+				for(const mail of markedForDeletion) {
+					await mail.restore();
+				}
 				sock.write("+OK\r\n")
 			}
 		})
