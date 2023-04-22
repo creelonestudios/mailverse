@@ -1,3 +1,4 @@
+import "@total-typescript/ts-reset";
 import POP3Server from "./pop3/POP3Server.js";
 import SMTPServer from "./smtp/SMTPServer.js";
 import { Sequelize } from 'sequelize-typescript';

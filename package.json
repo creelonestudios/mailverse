@@ -18,7 +18,6 @@
   "homepage": "https://github.com/creelonestudios/mailverse#readme",
   "type": "module",
   "dependencies": {
-    "@total-typescript/ts-reset": "^0.4.2",
     "mariadb": "^3.1.1",
     "sequelize": "^6.31.0",
     "sequelize-typescript": "^2.1.5"
