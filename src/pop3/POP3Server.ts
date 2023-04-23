@@ -22,7 +22,7 @@ export default class POP3Server {
 		sock.write("+OK POP3 server ready\r\n")
 		let username = ""
 		let user: User;
-		let markedForDeletion = [] as Mail[]
+		let markedForDeletion: Mail[] = []
 		sock.on("data", async (data: Buffer) => {
 			const msg = data.toString()
 			console.log("[POP3] Received data: " + msg)
