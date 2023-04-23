@@ -5,4 +5,5 @@ export default class User extends Model {
     username: string;
     password: string;
     mails: Mail[];
+    getMail(id: number): Promise<any>;
 }
