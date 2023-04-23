@@ -20,15 +20,16 @@ export default class POP3Server {
         sock.on("data", async (data) => {
             const msg = data.toString();
             console.log("[POP3] Received data: " + msg);
+            const args = msg.split(" ").slice(1);
             if (msg.startsWith("CAPA")) { // list capabilities
                 sock.write("+OK Capability list follows\r\nUSER\r\n.\r\n");
             }
             else if (msg.startsWith("USER")) { // client gives username
-                if (msg.split(" ").length < 2) {
+                if (args.length < 1) {
                     sock.write("-ERR Invalid username or password\r\n");
                     return;
                 }
-                username = msg.split(" ")[1].trim().toLowerCase();
+                username = args[0].trim().toLowerCase();
                 let _user = await User.findOne({ where: { username: username } });
                 if (!_user) {
                     sock.write("-ERR Invalid username or password\r\n");
@@ -38,11 +39,11 @@ export default class POP3Server {
                 sock.write("+OK\r\n");
             }
             else if (msg.startsWith("PASS")) { // client gives password
-                if (msg.split(" ").length < 2) {
+                if (args.length < 1) {
                     sock.write("-ERR Invalid username or password\r\n");
                     return;
                 }
-                const password = msg.split(" ")[1].trim();
+                const password = args[0].trim();
                 const hash = createHash("sha256");
                 hash.update(password);
                 const hashedPassword = hash.digest("hex");
@@ -70,11 +71,11 @@ export default class POP3Server {
                 sock.write(".\r\n");
             }
             else if (msg.startsWith("RETR")) {
-                if (msg.split(" ").length < 2) {
+                if (args.length < 1) {
                     sock.write("-ERR No message specified\r\n");
                     return;
                 }
-                const mail = await user.getMail(parseInt(msg.split(" ")[1].trim()));
+                const mail = await user.getMail(parseInt(args[0].trim()));
                 if (!mail) {
                     sock.write("-ERR No such message\r\n");
                     return;
@@ -83,11 +84,11 @@ export default class POP3Server {
                 sock.write("+OK\r\n" + content + "\r\n.\r\n");
             }
             else if (msg.startsWith("TOP")) {
-                if (msg.split(" ").length < 3) {
+                if (args.length < 2) {
                     sock.write("-ERR No message specified\r\n");
                     return;
                 }
-                const mail = await user.getMail(parseInt(msg.split(" ")[1].trim()));
+                const mail = await user.getMail(parseInt(args[0].trim()));
                 if (!mail) {
                     sock.write("-ERR No such message\r\n");
                     return;
@@ -105,11 +106,11 @@ export default class POP3Server {
                 sock.write(".\r\n");
             }
             else if (msg.startsWith("DELE")) {
-                if (msg.split(" ").length < 2) {
+                if (args.length < 1) {
                     sock.write("-ERR No message specified\r\n");
                     return;
                 }
-                const mail = await user.getMail(parseInt(msg.split(" ")[1].trim()));
+                const mail = await user.getMail(parseInt(args[0].trim()));
                 if (!mail) {
                     sock.write("-ERR No such message\r\n");
                     return;
