@@ -70,6 +70,12 @@ export default class SMTPServer {
 				console.log("[SMTP] RCPT TO: " + email)
 				sock.write("250 OK\r\n")
 			} else if(msg.startsWith("DATA")) {
+				// The spec says we should return either 503 or 554 if the client has not sent MAIL FROM or RCPT TO yet
+				// We will send 554 because it is more specific
+				if(info.from == "" || info.to.length == 0) {
+					sock.write("554 No valid recipients\r\n")
+					return
+				}
 				receivingData = true;
 				console.log("[SMTP] Now receiving data -----------------------------------")
 				sock.write("354 Start mail input; end with <CRLF>.<CRLF>\r\n")
