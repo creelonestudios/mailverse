@@ -85,6 +85,18 @@ export default class SMTPServer {
                     return;
                 }
                 const email = msg.split(":")[1].split(">")[0].replace("<", "");
+                const username = email.split("@")[0];
+                const domain = email.split("@")[1];
+                if (domain != getConfig("host")) {
+                    // The spec says we MAY forward the message ourselves, but simply returning 550 is fine, and the client should handle it
+                    sock.write(`550 ${this.messages.get(550)}\r\n`);
+                    return;
+                }
+                const user = await User.findOne({ where: { username } });
+                if (!user) {
+                    sock.write(`550 ${this.messages.get(550)}\r\n`);
+                    return;
+                }
                 info.to.push(email);
                 console.log("[SMTP] RCPT TO: " + email);
                 sock.write(`250 ${this.messages.get(250)}\r\n`);
