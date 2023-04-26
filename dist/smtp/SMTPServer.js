@@ -117,6 +117,7 @@ export default class SMTPServer {
                 sock.end();
             }
             else if (msg.startsWith("VRFY")) {
+                // This command is used to verify if a user exists, but that can be a security risk + it is also done with RCPT TO anyway
                 sock.write(`502 ${this.messages.get(502)}\r\n`);
             }
             else if (msg.startsWith("EXPN")) {
