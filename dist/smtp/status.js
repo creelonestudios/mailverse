@@ -21,7 +21,7 @@ const STATUS_CODES = {
     252: { code: 252, ok },
     // intermediate OK
     334: { code: 334, ok },
-    354: { code: 354, ok, message: "Start mail input" },
+    354: { code: 354, ok, message: "Start mail input; end with <CRLF>.<CRLF>" },
     // transient NOT OK
     421: { code: 421, ok: false, message: "Service not available, closing transmission channel" },
     450: { code: 450, ok: false, message: "Requested mail action not taken: mailbox unavailable" },

@@ -41,7 +41,7 @@ const STATUS_CODES: Record<number, StatusCode> = {
 	252: { code: 252, ok }, // Cannot verify the user, but it will try to deliver the message anyway
 	// intermediate OK
 	334: { code: 334, ok }, // base64-encoded server challenge
-	354: { code: 354, ok, message: "Start mail input" },
+	354: { code: 354, ok, message: "Start mail input; end with <CRLF>.<CRLF>" },
 	// transient NOT OK
 	421: { code: 421, ok: false, message: "Service not available, closing transmission channel" },
 	450: { code: 450, ok: false, message: "Requested mail action not taken: mailbox unavailable" }, // mailbox busy or temp. blocked
