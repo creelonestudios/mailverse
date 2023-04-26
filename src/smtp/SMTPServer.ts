@@ -49,11 +49,22 @@ export default class SMTPServer {
 				// We dont have any smtp extensions yet
 				sock.write("250 HELP\r\n")
 			} else if(msg.startsWith("MAIL FROM:")) {
+				// The spec says we should reset the state if the client sends MAIL FROM again
+				info = {
+					from: "",
+					to: [],
+					content: ""
+				}
 				const email = msg.split(":")[1].split(">")[0].replace("<", "")
 				console.log("[SMTP] MAIL FROM: " + email)
 				info.from = email
 				sock.write("250 OK\r\n")
 			} else if(msg.startsWith("RCPT TO:")) {
+				if(info.from == "") {
+					// The spec says we should return 503 if the client has not sent MAIL FROM yet
+					sock.write("503 Bad sequence of commands\r\n")
+					return
+				}
 				const email = msg.split(":")[1].split(">")[0].replace("<", "")
 				info.to.push(email)
 				console.log("[SMTP] RCPT TO: " + email)
