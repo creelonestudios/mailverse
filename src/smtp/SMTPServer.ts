@@ -20,7 +20,7 @@ export default class SMTPServer {
 
 	connection(sock: net.Socket) {
 		console.log("[SMTP] Client connected")
-		sock.write("220 " + getConfig("smtp_header") + "\r\n")
+		sock.write(`220  ${getConfig("smtp_header")}\r\n`)
 		let receivingData = false
 		let info = {
 			from: "",
