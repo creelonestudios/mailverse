@@ -1,3 +1,5 @@
+/// <reference types="node" resolution-mode="require"/>
+import net from "net";
 export type EnhancedStatusSubject = {
     code: number;
     name: string;
@@ -18,5 +20,6 @@ type StatusOptions = {
     enhancedCode?: EnhancedCode;
     args?: string[];
 };
-export default function status(code: number, options?: StatusOptions | EnhancedCode): string;
+export default function sendStatus(socket: net.Socket): (code: number, options?: StatusOptions | EnhancedCode) => void;
+export declare function status(code: number, options?: StatusOptions | EnhancedCode): string;
 export {};

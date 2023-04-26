@@ -1,3 +1,5 @@
+import net from "net"
+
 export type EnhancedStatusSubject = {
 	code: number,
 	name: string
@@ -87,7 +89,13 @@ type StatusOptions = {
 	args?: string[]
 }
 
-export default function status(code: number, options?: StatusOptions | EnhancedCode) {
+export default function sendStatus(socket: net.Socket) {
+	return (code: number, options?: StatusOptions | EnhancedCode) => {
+		socket.write(status(code, options))
+	}
+}
+
+export function status(code: number, options?: StatusOptions | EnhancedCode) {
 	if (typeof options == "string") options = { enhancedCode: options }
 	if (!(code in STATUS_CODES)) return `${code} ${options?.message}\r\n`
 	let statusCode = STATUS_CODES[code]

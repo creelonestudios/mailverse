@@ -59,7 +59,12 @@ const ENHANCED_STATUS_CODES = {
     "538 5.7.11": { code: 538, ok: false, message: "Encryption required for requested authentication mechanism", class: 5, subject: 7, detail: 11 },
     "554 5.3.4": { code: 554, ok: false, message: "Message too big for system", class: 5, subject: 7, detail: 8 }
 };
-export default function status(code, options) {
+export default function sendStatus(socket) {
+    return (code, options) => {
+        socket.write(status(code, options));
+    };
+}
+export function status(code, options) {
     if (typeof options == "string")
         options = { enhancedCode: options };
     if (!(code in STATUS_CODES))
