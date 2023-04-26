@@ -1,5 +1,6 @@
 import net from "net";
 import tls from "tls";
+import getConfig from "../config.js";
 export default class SMTPClient {
     static async sendMessage(host, port, from, to, content, useTLS) {
         // const sock = net.createConnection(port, host)
@@ -9,7 +10,7 @@ export default class SMTPClient {
         });
         sock.on("connect", async () => {
             console.log("[SMTPClient] Connected to server");
-            sock.write("EHLO localhost\r\n");
+            sock.write(`EHLO ${getConfig("host", "localhost")}\r\n`);
             sock.write("MAIL FROM:<" + from + ">\r\n");
             sock.write("RCPT TO:<" + to + ">\r\n");
             sock.write("DATA\r\n");

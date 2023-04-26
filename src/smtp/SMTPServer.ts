@@ -5,6 +5,7 @@ import Mail from "../models/Mail.js"
 import User from "../models/User.js"
 import { smtpserver } from "../main.js"
 import crypto from "node:crypto";
+import status from "./status.js"
 
 export default class SMTPServer {
 
@@ -20,7 +21,7 @@ export default class SMTPServer {
 
 	connection(sock: net.Socket) {
 		console.log("[SMTP] Client connected")
-		sock.write(`220  ${getConfig("smtp_header")}\r\n`)
+		sock.write(status(220, { message: getConfig("smtp_header", "SMTP Server ready") }))
 		let receivingData = false
 		let info = {
 			from: "",
