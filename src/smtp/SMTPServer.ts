@@ -20,7 +20,7 @@ export default class SMTPServer {
 
 	connection(sock: net.Socket) {
 		console.log("[SMTP] Client connected")
-		sock.write("220 localhost SMTP Mailverse\r\n")
+		sock.write("220 " + getConfig("smtp_header") + "\r\n")
 		let receivingData = false
 		let info = {
 			from: "",
@@ -79,7 +79,7 @@ export default class SMTPServer {
 		mkdirSync(`mails/`, { recursive: true })
 		writeFileSync(`mails/${id}.txt`, info.content)
 		console.log("[SMTP] Saved mail to " + `mails/${id}.txt`)
-		const serverName = getConfig("serverName")
+		const serverName = getConfig("host")
 		if(info.from.endsWith("@" + serverName)) {
 			console.log("[SMTP] Mail is from this server.")
 			if(info.to.every(email => email.endsWith("@" + serverName))) { // if all recipients are on this server

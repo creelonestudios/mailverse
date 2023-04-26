@@ -1,0 +1,8 @@
+{
+  "host": "example.com",
+  "db_dialect": "mariadb",
+  "db_username": "root",
+  "db_password": "secret",
+  "db_database": "mailverse",
+  "smtp_header": "example.com SMTP"
+}
