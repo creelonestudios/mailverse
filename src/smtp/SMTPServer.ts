@@ -104,6 +104,10 @@ export default class SMTPServer {
 			} else if(msg.startsWith("QUIT")) {
 				sock.write(`221 ${this.messages.get(221)}\r\n`)
 				sock.end()
+			} else if(msg.startsWith("VRFY")) {
+				sock.write(`502 ${this.messages.get(502)}\r\n`)
+			} else if(msg.startsWith("EXPN")) {
+				sock.write(`502 ${this.messages.get(502)}\r\n`)
 			} else {
 				sock.write(`500 ${this.messages.get(500)}\r\n`)
 			}
