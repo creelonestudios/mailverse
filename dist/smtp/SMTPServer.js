@@ -5,7 +5,7 @@ import User from "../models/User.js";
 import { smtpserver } from "../main.js";
 import crypto from "node:crypto";
 import Logger from "../Logger.js";
-const logger = new Logger("SMTP");
+const logger = new Logger("SMTP", "GREEN");
 export default class SMTPServer {
     server;
     constructor(port) {

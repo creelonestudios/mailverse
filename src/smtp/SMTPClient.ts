@@ -3,7 +3,7 @@ import tls from "tls"
 import getConfig from "../config.js"
 import Logger from "../Logger.js"
 
-const logger = new Logger("SMTPClient")
+const logger = new Logger("SMTPClient", "TEAL")
 
 export default class SMTPClient {
 
