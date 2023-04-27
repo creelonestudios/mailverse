@@ -3,7 +3,7 @@ declare const COLOR: {
     DARK: string;
     RED: string;
     GREEN: string;
-    YELLO: string;
+    YELLOW: string;
     PINK: string;
     TEAL: string;
     WHITE: string;

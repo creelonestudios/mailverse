@@ -6,12 +6,12 @@ const WHITE = ESC + "[97m";
 const DARK = ESC + "[90m";
 const RED = ESC + "[91m";
 const GREEN = ESC + "[92m";
-const YELLO = ESC + "[93m";
+const YELLOW = ESC + "[93m";
 const PINK = ESC + "[95m";
 const TEAL = ESC + "[96m";
 const WHITE = ESC + "[97m";
 const COLOR = {
-    GRAY, DARK, RED, GREEN, YELLO, PINK, TEAL, WHITE
+    GRAY, DARK, RED, GREEN, YELLOW, PINK, TEAL, WHITE
 };
 export default class Logger {
     actor;
@@ -30,7 +30,7 @@ export default class Logger {
         console.log(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${RED}`, message.join(" "));
     }
     warn(...message) {
-        console.warn(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${YELLO}`, message.join(" "));
+        console.warn(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${YELLOW}`, message.join(" "));
     }
     debug(...message) {
         console.debug(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${TEAL}`, message.join(" "));

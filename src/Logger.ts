@@ -7,13 +7,13 @@ const WHITE = ESC + "[97m"
 const DARK  = ESC + "[90m"
 const RED   = ESC + "[91m"
 const GREEN = ESC + "[92m"
-const YELLO = ESC + "[93m"
+const YELLOW = ESC + "[93m"
 const PINK  = ESC + "[95m"
 const TEAL  = ESC + "[96m"
 const WHITE = ESC + "[97m"
 
 const COLOR = {
-	GRAY, DARK, RED, GREEN, YELLO, PINK, TEAL, WHITE
+	GRAY, DARK, RED, GREEN, YELLOW, PINK, TEAL, WHITE
 }
 
 export default class Logger {
@@ -33,7 +33,7 @@ export default class Logger {
 	}
 
 	warn(...message: string[]) {
-		console.warn(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${YELLO}`, message.join(" "))
+		console.warn(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${YELLOW}`, message.join(" "))
 	}
 
 	debug(...message: string[]) {
