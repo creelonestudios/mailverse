@@ -2,24 +2,26 @@ import net from "net";
 import User from "../models/User.js";
 import { createHash } from "node:crypto";
 import { readFile } from "fs/promises";
+import Logger from "../Logger.js";
+const logger = new Logger("POP3", "YELLOW");
 export default class POP3Server {
     server;
     constructor(port) {
         this.server = net.createServer();
         this.server.listen(port, () => {
-            console.log("[POP3] Server listening on port " + port);
+            logger.log("Server listening on port " + port);
         });
         this.server.on("connection", this.connection);
     }
     connection(sock) {
-        console.log("[POP3] Client connected");
+        logger.log("Client connected");
         sock.write("+OK POP3 server ready\r\n");
         let username = "";
         let user;
         const markedForDeletion = [];
         sock.on("data", async (data) => {
             const msg = data.toString();
-            console.log("[POP3] Received data: " + msg);
+            logger.log("Received data: " + msg);
             const args = msg.split(" ").slice(1);
             if (msg.startsWith("CAPA")) { // list capabilities
                 sock.write("+OK Capability list follows\r\nUSER\r\n.\r\n");
@@ -111,7 +113,7 @@ export default class POP3Server {
             }
         });
         sock.addListener("close", () => {
-            console.log("[POP3] Client disconnected");
+            logger.log("Client disconnected");
         });
     }
 }

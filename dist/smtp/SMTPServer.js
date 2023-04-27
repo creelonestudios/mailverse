@@ -4,18 +4,20 @@ import getConfig from "../config.js";
 import User from "../models/User.js";
 import { smtpserver } from "../main.js";
 import crypto from "node:crypto";
+import Logger from "../Logger.js";
+const logger = new Logger("SMTP", "GREEN");
 export default class SMTPServer {
     server;
     constructor(port) {
         this.server = net.createServer();
         this.server.listen(port, () => {
-            console.log("[SMTP] Server listening on port " + port);
+            logger.log(`Server listening on port ${port}`);
         });
         this.server.on("connection", this.connection);
     }
     connection(sock) {
-        console.log("[SMTP] Client connected");
-        sock.write("220 localhost SMTP Mailverse\r\n");
+        logger.log("Client connected");
+        sock.write(`220  ${getConfig("smtp_header")}\r\n`);
         let receivingData = false;
         let info = {
             from: "",
@@ -26,19 +28,19 @@ export default class SMTPServer {
             const msg = data.toString();
             // TODO implement regular HELO greeting
             if (receivingData) {
-                console.log("[SMTP] Received message content: " + msg);
+                logger.log(`Received message content: ${msg}`);
                 info.content += msg;
                 if (msg.endsWith(".\r\n")) {
                     receivingData = false;
                     info.content = info.content.substring(0, info.content.length - 3).replaceAll("\r\n", "\n");
                     await smtpserver.handleNewMail(info);
                     sock.write("250 OK\r\n");
-                    console.log("[SMTP] No longer receiving data -----------------------------------");
+                    logger.log("No longer receiving data -----------------------------------");
                     return;
                 }
                 return;
             }
-            console.log("[SMTP] Received data: " + msg);
+            logger.log(`Received data: ${msg}`);
             if (msg.startsWith("EHLO")) {
                 sock.write("250-localhost\r\n");
                 // We dont have any smtp extensions yet
@@ -46,19 +48,19 @@ export default class SMTPServer {
             }
             else if (msg.startsWith("MAIL FROM:")) {
                 const email = msg.split(":")[1].split(">")[0].replace("<", "");
-                console.log("[SMTP] MAIL FROM: " + email);
+                logger.log(`MAIL FROM: ${email}`);
                 info.from = email;
                 sock.write("250 OK\r\n");
             }
             else if (msg.startsWith("RCPT TO:")) {
                 const email = msg.split(":")[1].split(">")[0].replace("<", "");
                 info.to.push(email);
-                console.log("[SMTP] RCPT TO: " + email);
+                logger.log(`RCPT TO: ${email}`);
                 sock.write("250 OK\r\n");
             }
             else if (msg.startsWith("DATA")) {
                 receivingData = true;
-                console.log("[SMTP] Now receiving data -----------------------------------");
+                logger.log("Now receiving data -----------------------------------");
                 sock.write("354 Start mail input; end with <CRLF>.<CRLF>\r\n");
             }
             else if (msg.startsWith("QUIT")) {
@@ -70,36 +72,36 @@ export default class SMTPServer {
             }
         });
         sock.on("close", () => {
-            console.log("[SMTP] Client disconnected");
+            logger.log("Client disconnected");
         });
     }
     async handleNewMail(info) {
         const id = crypto.randomUUID();
         mkdirSync(`mails/`, { recursive: true });
         writeFileSync(`mails/${id}.txt`, info.content);
-        console.log("[SMTP] Saved mail to " + `mails/${id}.txt`);
-        const serverName = getConfig("serverName");
+        logger.log(`Saved mail to mails/${id}.txt`);
+        const serverName = getConfig("host");
         if (info.from.endsWith("@" + serverName)) {
-            console.log("[SMTP] Mail is from this server.");
+            logger.log("Mail is from this server.");
             if (info.to.every(email => email.endsWith("@" + serverName))) { // if all recipients are on this server
-                console.log("[SMTP] All recipients are on this server.");
+                logger.log("All recipients are on this server.");
                 // TODO: add mail to mailboxes
                 return;
             }
-            console.log("[SMTP] Not all recipients are on this server. Will forward mail to other servers.");
-            console.error("[SMTP] Forwarding mails to other servers is not implemented yet.");
+            logger.log("Not all recipients are on this server. Will forward mail to other servers.");
+            logger.error("Forwarding mails to other servers is not implemented yet.");
             return;
         }
         // Mail is not from this server
         if (!info.to.every(email => email.endsWith("@" + serverName))) {
-            console.error("[SMTP] Not all recipients are from this server. Will NOT forward mail to other servers.");
+            logger.error("Not all recipients are from this server. Will NOT forward mail to other servers.");
         }
         const recipients = info.to.filter(email => email.endsWith("@" + serverName));
         for (const rec of recipients) {
-            console.log("[SMTP] Forwarding mail to " + rec);
+            logger.log("Forwarding mail to " + rec);
             const user = await User.findOne({ where: { username: rec.split("@")[0] } });
             if (!user) {
-                console.error("[SMTP] User " + rec + " does not exist.");
+                logger.error("User " + rec + " does not exist.");
                 continue;
             }
             await user.$create("mail", {
@@ -107,7 +109,7 @@ export default class SMTPServer {
                 to: rec,
                 content: id
             });
-            console.log("[SMTP] Forwarded mail to " + rec);
+            logger.log("Forwarded mail to " + rec);
         }
     }
 }

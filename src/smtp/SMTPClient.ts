@@ -1,6 +1,9 @@
 import net from "net"
 import tls from "tls"
 import getConfig from "../config.js"
+import Logger from "../Logger.js"
+
+const logger = new Logger("SMTPClient", "TEAL")
 
 export default class SMTPClient {
 
@@ -8,10 +11,10 @@ export default class SMTPClient {
 		// const sock = net.createConnection(port, host)
 		const sock = useTLS ? tls.connect(port, host) : net.createConnection(port, host)
 		sock.on("data", (data: Buffer) => {
-			console.log("[SMTPClient] Received data: " + data.toString())
+			logger.log(`Received data: ${data.toString()}`)
 		})
 		sock.on("connect", async () => {
-			console.log("[SMTPClient] Connected to server")
+			logger.log("Connected to server")
 			sock.write(`EHLO ${getConfig("host", "localhost")}\r\n`)
 			sock.write("MAIL FROM:<" + from + ">\r\n")
 			sock.write("RCPT TO:<" + to + ">\r\n")
