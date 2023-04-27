@@ -6,7 +6,7 @@ import { readFile } from "fs/promises"
 import Mail from "../models/Mail.js"
 import Logger from "../Logger.js"
 
-const logger = new Logger("POP3", "YELLO")
+const logger = new Logger("POP3", "YELLOW")
 
 export default class POP3Server {
 
