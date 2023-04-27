@@ -16,7 +16,7 @@ export const sql = new Sequelize({
 // await sql.sync({ alter: true })
 
 // await User.create({
-// 	name: "Certified Milkshake",
+// 	name: "Cfp",
 // 	username: "cfp",
 // 	password: "1234"
 // })
