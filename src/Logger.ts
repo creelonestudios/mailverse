@@ -24,24 +24,24 @@ export default class Logger {
 		}
 	}
 	
-	log(message: string) {
-		console.log(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${GRAY}`, message)
+	log(...message: string[]) {
+		console.log(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${GRAY}`, message.join(" "))
 	}
 
-	error(message: string) {
-		console.log(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${RED}`, message)
+	error(...message: string[]) {
+		console.log(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${RED}`, message.join(" "))
 	}
 
-	warn(message: string) {
-		console.warn(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${YELLO}`, message)
+	warn(...message: string[]) {
+		console.warn(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${YELLO}`, message.join(" "))
 	}
 
-	debug(message: string) {
-		console.debug(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${TEAL}`, message)
+	debug(...message: string[]) {
+		console.debug(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${TEAL}`, message.join(" "))
 	}
 
-	trace(message: string) {
-		console.trace(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${WHITE}`, message)
+	trace(...message: string[]) {
+		console.trace(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${WHITE}`, message.join(" "))
 	}
 
 }

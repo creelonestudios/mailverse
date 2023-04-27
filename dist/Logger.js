@@ -23,20 +23,20 @@ export default class Logger {
             this.debug = () => { }; // only enable debug logs when debugging is on
         }
     }
-    log(message) {
-        console.log(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${GRAY}`, message);
+    log(...message) {
+        console.log(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${GRAY}`, message.join(" "));
     }
-    error(message) {
-        console.log(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${RED}`, message);
+    error(...message) {
+        console.log(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${RED}`, message.join(" "));
     }
-    warn(message) {
-        console.warn(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${YELLO}`, message);
+    warn(...message) {
+        console.warn(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${YELLO}`, message.join(" "));
     }
-    debug(message) {
-        console.debug(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${TEAL}`, message);
+    debug(...message) {
+        console.debug(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${TEAL}`, message.join(" "));
     }
-    trace(message) {
-        console.trace(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${WHITE}`, message);
+    trace(...message) {
+        console.trace(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${WHITE}`, message.join(" "));
     }
 }
 function time() {

@@ -12,10 +12,10 @@ export default class Logger {
     private readonly actor;
     private readonly color;
     constructor(actor: string, color: keyof typeof COLOR);
-    log(message: string): void;
-    error(message: string): void;
-    warn(message: string): void;
-    debug(message: string): void;
-    trace(message: string): void;
+    log(...message: string[]): void;
+    error(...message: string[]): void;
+    warn(...message: string[]): void;
+    debug(...message: string[]): void;
+    trace(...message: string[]): void;
 }
 export {};
