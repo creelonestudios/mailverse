@@ -1,9 +1,8 @@
 import net from "net";
 import tls from "tls";
-import { readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import User from "../models/User.js";
 import { createHash } from "node:crypto";
-import { readFile } from "fs/promises";
 import Logger from "../Logger.js";
 import getConfig from "../config.js";
 const logger = new Logger("POP3", "YELLOW");
@@ -12,6 +11,16 @@ export default class POP3Server {
     useTLS;
     constructor(port, useTLS) {
         this.useTLS = useTLS;
+        if (useTLS) {
+            if (!existsSync(getConfig("tls_key", "cert/privkey.pem"))) {
+                logger.error("TLS key not found");
+                process.exit(1);
+            }
+            if (!existsSync(getConfig("tls_cert", "cert/fullchain.pem"))) {
+                logger.error("TLS certificate not found");
+                process.exit(1);
+            }
+        }
         this.server = useTLS ? tls.createServer({
             key: readFileSync(getConfig("tls_key", "cert/privkey.pem")),
             cert: readFileSync(getConfig("tls_cert", "cert/fullchain.pem"))
