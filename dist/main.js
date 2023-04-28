@@ -13,9 +13,9 @@ export const sql = new Sequelize({
 });
 // await sql.sync({ alter: true })
 // await User.create({
-// 	name: "Certified Milkshake",
+// 	name: "Cfp",
 // 	username: "cfp",
 // 	password: "1234"
 // })
-export const smtpserver = new SMTPServer(getConfig("smtp_port")); // Port 25 for regular SMTP, 465 for SMTPS
-const pop3server = new POP3Server(getConfig("pop3_port")); // Port 110 for regular POP3, 995 for POP3S
+export const smtpserver = new SMTPServer(getConfig("smtp_port", 25)); // Port 25 for regular SMTP, 465 for SMTPS
+const pop3server = new POP3Server(getConfig("pop3_port", 110)); // Port 110 for regular POP3, 995 for POP3S
