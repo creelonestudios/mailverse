@@ -19,7 +19,7 @@ export default function getConfig(key: string, defaultValue?: ConfigValue): any 
 	}
 	
 	value = value ?? process.env[key] ?? process.env[key.replaceAll(".", "_")] ?? defaultValue
-	console.log("config:", key, value)
+	//console.log("config:", key, value)
 	if (value != undefined) {
 		if (error) logger.warn(error)
 		return value
@@ -27,11 +27,6 @@ export default function getConfig(key: string, defaultValue?: ConfigValue): any 
 
 	throw new Error(error) || new Error("Config key " + key + " not found")
 }
-
-console.log("test:", getConfig("test", "?"))
-console.log("this.is.a.path:", getConfig("this.is.a.path", "?"))
-console.log("smtp.port", getConfig("smtp.port", "?"))
-console.log("smtp_port", getConfig("smtp_port", "?"))
 
 function searchJsonKey(key: string, defaultValue?: ConfigValue): ConfigValue | undefined {
 	const path = key.split(".")
