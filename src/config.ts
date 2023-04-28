@@ -8,7 +8,7 @@ const logger = new Logger("config", "PINK")
 
 type ConfigValue = string | number | boolean
 
-export default function getConfig(key: string, defaultValue?: ConfigValue): any {
+export default function getConfig<T extends ConfigValue>(key: string, defaultValue?: T): T {
 	let value: ConfigValue | undefined = undefined
 	let error: string | undefined = undefined
 	try {
@@ -22,7 +22,10 @@ export default function getConfig(key: string, defaultValue?: ConfigValue): any 
 	//console.log("config:", key, value)
 	if (value != undefined) {
 		if (error) logger.warn(error)
-		return value
+		if (defaultValue != undefined && typeof value != typeof defaultValue) {
+			throw new Error(`Config type of ${key} does not match default value (${typeof defaultValue}).`)
+		}
+		return value as T
 	}
 
 	throw new Error(error) || new Error("Config key " + key + " not found")

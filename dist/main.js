@@ -7,10 +7,10 @@ import getConfig from "./config.js";
 import { readFile } from "node:fs/promises";
 global.debug = getConfig("debug", false);
 export const sql = new Sequelize({
-    database: getConfig("db_database"),
-    dialect: getConfig("db_dialect"),
-    username: getConfig("db_username"),
-    password: getConfig("db_password"),
+    database: getConfig("db.database"),
+    dialect: getConfig("db.dialect"),
+    username: getConfig("db.username"),
+    password: getConfig("db.password"),
     models: [User, Mail]
 });
 // await sql.sync({ alter: true })

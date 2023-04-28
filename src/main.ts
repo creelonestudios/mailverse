@@ -4,16 +4,16 @@ import { Sequelize } from 'sequelize-typescript';
 import User from "./models/User.js";
 import Mail from "./models/Mail.js";
 import getConfig from "./config.js";
-import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
+import { Dialect } from "sequelize"
 
-global.debug = getConfig("debug", false)
+global.debug = getConfig("debug", false) as any
 
 export const sql = new Sequelize({
-  database: getConfig("db_database"),
-  dialect: getConfig("db_dialect"),
-  username: getConfig("db_username"),
-  password: getConfig("db_password"),
+  database: getConfig<string>("db.database"),
+  dialect: getConfig<Dialect>("db.dialect"),
+  username: getConfig<string>("db.username"),
+  password: getConfig<string>("db.password"),
   models: [User, Mail]
 });
 

@@ -18,6 +18,9 @@ export default function getConfig(key, defaultValue) {
     if (value != undefined) {
         if (error)
             logger.warn(error);
+        if (defaultValue != undefined && typeof value != typeof defaultValue) {
+            throw new Error(`Config type of ${key} does not match default value (${typeof defaultValue}).`);
+        }
         return value;
     }
     throw new Error(error) || new Error("Config key " + key + " not found");
