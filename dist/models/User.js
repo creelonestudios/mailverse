@@ -9,6 +9,12 @@ import { AllowNull, Column, HasMany, Model, PrimaryKey, Table, Unique } from "se
 import Mail from "./Mail.js";
 import { createHash } from "node:crypto";
 let User = class User extends Model {
+    async getMail(id) {
+        const mails = await this.$get("mails");
+        if (!mails)
+            return undefined;
+        return mails[id];
+    }
 };
 __decorate([
     AllowNull(false),

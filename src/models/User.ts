@@ -34,4 +34,10 @@ export default class User extends Model {
 	@HasMany(() => Mail)
 	declare mails: Mail[];
 
+	async getMail(id: number) {
+		const mails = await this.$get("mails")
+		if(!mails) return undefined;
+		return mails[id];
+	}
+
 }
