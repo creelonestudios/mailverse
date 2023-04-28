@@ -2,7 +2,6 @@ import getConfig from "./config.js";
 const ESC = "\u001b";
 const RESET = ESC + "[m";
 const GRAY = ESC + "[37m";
-const WHITE = ESC + "[97m";
 const DARK = ESC + "[90m";
 const RED = ESC + "[91m";
 const GREEN = ESC + "[92m";
