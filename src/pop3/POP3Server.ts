@@ -1,6 +1,5 @@
 import net from "net"
 import tls from "tls"
-import { existsSync, readdirSync, readFileSync } from "fs"
 import User from "../models/User.js"
 import { createHash } from "node:crypto"
 import Mail from "../models/Mail.js"
