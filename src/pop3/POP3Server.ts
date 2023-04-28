@@ -40,7 +40,13 @@ export default class POP3Server {
 					if(!username.endsWith("@" + getConfig("host", "localhost"))) {
 						return void sock.write("-ERR Invalid username or password\r\n")
 					}
-					username = username.split("@")[0]
+					username = username.substring(0, username.lastIndexOf("@"))
+				}
+				if (username.startsWith("\"") && username.endsWith("\"")) {
+					username = username.substring(1, username.length-1)
+				} else if (username.includes("@")) {
+					// this is not allowed
+					return void sock.write("-ERR Invalid username or password\r\n")
 				}
 				let _user = await User.findOne({ where: { username: username } })
 				if(!_user) return void sock.write("-ERR Invalid username or password\r\n")
