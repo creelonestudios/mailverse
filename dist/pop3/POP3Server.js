@@ -3,6 +3,7 @@ import User from "../models/User.js";
 import { createHash } from "node:crypto";
 import { readFile } from "fs/promises";
 import Logger from "../Logger.js";
+import getConfig from "../config.js";
 const logger = new Logger("POP3", "YELLOW");
 export default class POP3Server {
     server;
@@ -30,6 +31,12 @@ export default class POP3Server {
                 if (args.length < 1)
                     return void sock.write("-ERR Invalid username or password\r\n");
                 username = args[0].trim().toLowerCase();
+                if (username.includes("@")) {
+                    if (!username.endsWith("@" + getConfig("host", "localhost"))) {
+                        return void sock.write("-ERR Invalid username or password\r\n");
+                    }
+                    username = username.split("@")[0];
+                }
                 let _user = await User.findOne({ where: { username: username } });
                 if (!_user)
                     return void sock.write("-ERR Invalid username or password\r\n");
