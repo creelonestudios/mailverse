@@ -1,24 +1,30 @@
 import net from "net"
-import { readdirSync, readFileSync } from "fs"
+import tls from "tls"
 import User from "../models/User.js"
 import { createHash } from "node:crypto"
-import { readFile } from "fs/promises"
 import Mail from "../models/Mail.js"
 import Logger from "../Logger.js"
 import getConfig from "../config.js"
+import { readFile } from "fs/promises"
 
 const logger = new Logger("POP3", "YELLOW")
 
 export default class POP3Server {
 
 	server: net.Server
+	useTLS: boolean
 
-	constructor(port: number) {
-		this.server = net.createServer()
+	constructor(port: number, useTLS: boolean, key?: Buffer, cert?: Buffer) {
+		this.useTLS = useTLS
+		if(useTLS && (!key || !cert)) throw new Error("TLS key or certificate not provided");
+		this.server = useTLS ? tls.createServer({
+			key,
+			cert,
+		}, this.connection) : net.createServer()
 		this.server.listen(port, () => {
 			logger.log("Server listening on port " + port)
 		})
-		this.server.on("connection", this.connection)
+		if(!useTLS) this.server.on("connection", this.connection)
 	}
 
 	connection(sock: net.Socket) {

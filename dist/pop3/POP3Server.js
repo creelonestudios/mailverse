@@ -1,18 +1,27 @@
 import net from "net";
+import tls from "tls";
 import User from "../models/User.js";
 import { createHash } from "node:crypto";
-import { readFile } from "fs/promises";
 import Logger from "../Logger.js";
 import getConfig from "../config.js";
+import { readFile } from "fs/promises";
 const logger = new Logger("POP3", "YELLOW");
 export default class POP3Server {
     server;
-    constructor(port) {
-        this.server = net.createServer();
+    useTLS;
+    constructor(port, useTLS, key, cert) {
+        this.useTLS = useTLS;
+        if (useTLS && (!key || !cert))
+            throw new Error("TLS key or certificate not provided");
+        this.server = useTLS ? tls.createServer({
+            key,
+            cert,
+        }, this.connection) : net.createServer();
         this.server.listen(port, () => {
             logger.log("Server listening on port " + port);
         });
-        this.server.on("connection", this.connection);
+        if (!useTLS)
+            this.server.on("connection", this.connection);
     }
     connection(sock) {
         logger.log("Client connected");
@@ -35,7 +44,14 @@ export default class POP3Server {
                     if (!username.endsWith("@" + getConfig("host", "localhost"))) {
                         return void sock.write("-ERR Invalid username or password\r\n");
                     }
-                    username = username.split("@")[0];
+                    username = username.substring(0, username.lastIndexOf("@"));
+                }
+                if (username.startsWith("\"") && username.endsWith("\"")) {
+                    username = username.substring(1, username.length - 1);
+                }
+                else if (username.includes("@")) {
+                    // this is not allowed
+                    return void sock.write("-ERR Invalid username or password\r\n");
                 }
                 let _user = await User.findOne({ where: { username: username } });
                 if (!_user)

@@ -2,7 +2,6 @@ import net from "net";
 import { writeFileSync, mkdirSync } from "fs";
 import getConfig from "../config.js";
 import User from "../models/User.js";
-import { smtpserver } from "../main.js";
 import crypto from "node:crypto";
 import sendStatus from "./status.js";
 import Logger from "../Logger.js";
@@ -35,7 +34,7 @@ export default class SMTPServer {
                 if (msg.endsWith(".\r\n")) {
                     receivingData = false;
                     info.content = info.content.substring(0, info.content.length - 3).replaceAll("\r\n", "\n");
-                    await smtpserver.handleNewMail(info);
+                    await this.handleNewMail(info);
                     status(250);
                     logger.log("No longer receiving data -----------------------------------");
                     return;
