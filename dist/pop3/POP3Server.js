@@ -3,7 +3,7 @@ import User from "../models/User.js";
 import { createHash } from "node:crypto";
 import { readFile } from "fs/promises";
 import Logger from "../Logger.js";
-const logger = new Logger("POP3", "YELLO");
+const logger = new Logger("POP3", "YELLOW");
 export default class POP3Server {
     server;
     constructor(port) {
