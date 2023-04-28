@@ -44,7 +44,7 @@ export default class SMTPServer {
             }
             logger.log(`Received data: ${msg}`);
             if (msg.startsWith("EHLO")) {
-                sock.write("250-localhost\r\n");
+                sock.write(`250-${getConfig("host", "localhost")}\r\n`);
                 // We dont have any smtp extensions yet
                 status(250, { message: "HELP" }); // was: 250 HELP
             }
@@ -63,7 +63,7 @@ export default class SMTPServer {
             else if (msg.startsWith("RCPT TO:")) {
                 if (info.from == "") {
                     // The spec says we should return 503 if the client has not sent MAIL FROM yet
-                    sock.write(`503 Bad sequence of commands\r\n`);
+                    status(503);
                     return;
                 }
                 const email = msg.split(":")[1].split(">")[0].replace("<", "");
@@ -71,12 +71,12 @@ export default class SMTPServer {
                 const domain = email.split("@")[1];
                 if (domain != getConfig("host")) {
                     // The spec says we MAY forward the message ourselves, but simply returning 550 is fine, and the client should handle it
-                    sock.write(`550 Requested action not taken: mailbox unavailable\r\n`);
+                    status(550);
                     return;
                 }
                 const user = await User.findOne({ where: { username } });
                 if (!user) {
-                    sock.write(`550 Requested action not taken: mailbox unavailable\r\n`);
+                    status(550);
                     return;
                 }
                 info.to.push(email);
@@ -87,7 +87,7 @@ export default class SMTPServer {
                 // The spec says we should return either 503 or 554 if the client has not sent MAIL FROM or RCPT TO yet
                 // We will send 554 because it is more specific
                 if (info.from == "" || info.to.length == 0) {
-                    sock.write(`554 No valid recipients\r\n`);
+                    status(554, { message: "No valid recipients" });
                     return;
                 }
                 receivingData = true;
@@ -100,10 +100,10 @@ export default class SMTPServer {
             }
             else if (msg.startsWith("VRFY")) {
                 // This command is used to verify if a user exists, but that can be a security risk + it is also done with RCPT TO anyway
-                sock.write(`502 Command not implemented\r\n`);
+                status(502);
             }
             else if (msg.startsWith("EXPN")) {
-                sock.write(`502 Command not implemented\r\n`);
+                status(502);
             }
             else {
                 status(502);
