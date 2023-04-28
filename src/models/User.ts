@@ -37,7 +37,7 @@ export default class User extends Model {
 	async getMail(id: number) {
 		const mails = await this.$get("mails")
 		if(!mails) return undefined;
-		return mails.find(mail => mail.id == id);
+		return mails[id];
 	}
 
 }

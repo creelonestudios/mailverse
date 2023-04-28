@@ -3,6 +3,7 @@ import tls from "tls";
 import User from "../models/User.js";
 import { createHash } from "node:crypto";
 import Logger from "../Logger.js";
+import getConfig from "../config.js";
 import { readFile } from "fs/promises";
 const logger = new Logger("POP3", "YELLOW");
 export default class POP3Server {
@@ -39,6 +40,19 @@ export default class POP3Server {
                 if (args.length < 1)
                     return void sock.write("-ERR Invalid username or password\r\n");
                 username = args[0].trim().toLowerCase();
+                if (username.includes("@")) {
+                    if (!username.endsWith("@" + getConfig("host", "localhost"))) {
+                        return void sock.write("-ERR Invalid username or password\r\n");
+                    }
+                    username = username.substring(0, username.lastIndexOf("@"));
+                }
+                if (username.startsWith("\"") && username.endsWith("\"")) {
+                    username = username.substring(1, username.length - 1);
+                }
+                else if (username.includes("@")) {
+                    // this is not allowed
+                    return void sock.write("-ERR Invalid username or password\r\n");
+                }
                 let _user = await User.findOne({ where: { username: username } });
                 if (!_user)
                     return void sock.write("-ERR Invalid username or password\r\n");
@@ -71,7 +85,7 @@ export default class POP3Server {
                 const mails = await user.$get("mails");
                 sock.write("+OK " + mails.length + " messages\r\n");
                 for (let i = 0; i < mails.length; i++) {
-                    sock.write((i + 1) + "\r\n");
+                    sock.write(i + "\r\n");
                 }
                 sock.write(".\r\n");
             }
@@ -98,7 +112,7 @@ export default class POP3Server {
             else if (msg.startsWith("UIDL")) { // get unique id of message
                 const mails = await user.$get("mails");
                 for (let i = 0; i < mails.length; i++) {
-                    sock.write((i + 1) + " " + mails[i].uuid + "\r\n");
+                    sock.write(i + " " + mails[i].uuid + "\r\n");
                 }
                 sock.write(".\r\n");
             }
