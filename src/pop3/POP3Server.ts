@@ -6,6 +6,7 @@ import { createHash } from "node:crypto"
 import Mail from "../models/Mail.js"
 import Logger from "../Logger.js"
 import getConfig from "../config.js"
+import { readFile } from "fs/promises"
 
 const logger = new Logger("POP3", "YELLOW")
 
@@ -14,21 +15,12 @@ export default class POP3Server {
 	server: net.Server
 	useTLS: boolean
 
-	constructor(port: number, useTLS: boolean) {
+	constructor(port: number, useTLS: boolean, key?: Buffer, cert?: Buffer) {
 		this.useTLS = useTLS
-		if(useTLS) {
-			if(!existsSync(getConfig("tls_key", "cert/privkey.pem"))) {
-				logger.error("TLS key not found")
-				process.exit(1)
-			}
-			if(!existsSync(getConfig("tls_cert", "cert/fullchain.pem"))) {
-				logger.error("TLS certificate not found")
-				process.exit(1)
-			}
-		}
+		if(useTLS && (!key || !cert)) throw new Error("TLS key or certificate not provided");
 		this.server = useTLS ? tls.createServer({
-			key: readFileSync(getConfig("tls_key", "cert/privkey.pem")),
-			cert: readFileSync(getConfig("tls_cert", "cert/fullchain.pem"))
+			key,
+			cert,
 		}, this.connection) : net.createServer()
 		this.server.listen(port, () => {
 			logger.log("Server listening on port " + port)
