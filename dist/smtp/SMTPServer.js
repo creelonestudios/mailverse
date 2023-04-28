@@ -129,8 +129,7 @@ export default class SMTPServer {
             }
             logger.log("All recipients are on this server.");
         }
-        // Mail is not from this server
-        if (!info.to.every(email => email.endsWith("@" + serverName))) {
+        else if (!info.to.every(email => email.endsWith("@" + serverName))) {
             logger.warn("Not all recipients are from this server. Will NOT forward mail to other servers.");
         }
         const recipients = info.to.filter(email => email.endsWith("@" + serverName));
