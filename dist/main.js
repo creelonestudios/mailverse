@@ -5,6 +5,7 @@ import User from "./models/User.js";
 import Mail from "./models/Mail.js";
 import getConfig from "./config.js";
 import { readFile } from "node:fs/promises";
+global.debug = getConfig("debug", false);
 export const sql = new Sequelize({
     database: getConfig("db_database"),
     dialect: getConfig("db_dialect"),

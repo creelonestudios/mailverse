@@ -7,6 +7,8 @@ import getConfig from "./config.js";
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 
+global.debug = getConfig("debug", false)
+
 export const sql = new Sequelize({
   database: getConfig("db_database"),
   dialect: getConfig("db_dialect"),

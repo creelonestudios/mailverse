@@ -1,5 +1,3 @@
-import getConfig from "./config.js"
-
 const ESC = "\u001b"
 const RESET = ESC + "[m"
 const GRAY  = ESC + "[37m"
@@ -18,7 +16,7 @@ const COLOR = {
 export default class Logger {
 
 	constructor(private readonly actor: string, private readonly color: keyof typeof COLOR) {
-		if (!getConfig("debug", false)) {
+		if (!global.debug) {
 			this.debug = () => {} // only enable debug logs when debugging is on
 		}
 	}
