@@ -73,7 +73,7 @@ export default class POP3Server {
 				const mails = await user.$get("mails")
 				sock.write("+OK " + mails.length + " messages\r\n")
 				for(let i = 0; i < mails.length; i++) {
-					sock.write((i + 1) + "\r\n")
+					sock.write(i + "\r\n")
 				}
 				sock.write(".\r\n")
 			} else if(msg.startsWith("RETR")) {
@@ -93,7 +93,7 @@ export default class POP3Server {
 			} else if(msg.startsWith("UIDL")) { // get unique id of message
 				const mails = await user.$get("mails")
 				for(let i = 0; i < mails.length; i++) {
-					sock.write((i + 1) + " " + mails[i].uuid + "\r\n")
+					sock.write(i + " " + mails[i].uuid + "\r\n")
 				}
 				sock.write(".\r\n")
 			} else if(msg.startsWith("DELE")) {

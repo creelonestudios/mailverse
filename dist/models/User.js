@@ -13,7 +13,7 @@ let User = class User extends Model {
         const mails = await this.$get("mails");
         if (!mails)
             return undefined;
-        return mails.find(mail => mail.id == id);
+        return mails[id];
     }
 };
 __decorate([
