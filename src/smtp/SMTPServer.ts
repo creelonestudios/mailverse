@@ -25,7 +25,7 @@ export default class SMTPServer {
 	connection(sock: net.Socket) {
 		const status = sendStatus(sock)
 
-		console.log("[SMTP] Client connected")
+		logger.log("Client connected")
 		status(220, { message: getConfig("smtp_header", "SMTP Server ready") })
 		let receivingData = false
 		let info = {
@@ -44,7 +44,7 @@ export default class SMTPServer {
 					info.content = info.content.substring(0, info.content.length - 3).replaceAll("\r\n", "\n")
 					await smtpserver.handleNewMail(info)
 					status(250)
-					console.log("[SMTP] No longer receiving data -----------------------------------")
+					logger.log("No longer receiving data -----------------------------------")
 					return
 				}
 				return
