@@ -121,18 +121,17 @@ export default class SMTPServer {
         const serverName = getConfig("host");
         if (info.from.endsWith("@" + serverName)) {
             logger.log("Mail is from this server.");
-            if (info.to.every(email => email.endsWith("@" + serverName))) { // if all recipients are on this server
-                logger.log("All recipients are on this server.");
-                // TODO: add mail to mailboxes
+            if (!info.to.every(email => email.endsWith("@" + serverName))) { // if not all recipients are on this server
+                logger.log("Not all recipients are on this server. Will forward mail to other servers.");
+                logger.error("Forwarding mails to other servers is not implemented yet.");
+                // TODO: forward mail to other servers using SMTPClient
                 return;
             }
-            logger.log("Not all recipients are on this server. Will forward mail to other servers.");
-            logger.error("Forwarding mails to other servers is not implemented yet.");
-            return;
+            logger.log("All recipients are on this server.");
         }
         // Mail is not from this server
         if (!info.to.every(email => email.endsWith("@" + serverName))) {
-            logger.error("Not all recipients are from this server. Will NOT forward mail to other servers.");
+            logger.warn("Not all recipients are from this server. Will NOT forward mail to other servers.");
         }
         const recipients = info.to.filter(email => email.endsWith("@" + serverName));
         for (const rec of recipients) {
@@ -140,6 +139,7 @@ export default class SMTPServer {
             const user = await User.findOne({ where: { username: rec.split("@")[0] } });
             if (!user) {
                 logger.error("User " + rec + " does not exist.");
+                // Since we verify the recipients at the RCPT TO command, we should never get here, but you never know
                 continue;
             }
             await user.$create("mail", {
