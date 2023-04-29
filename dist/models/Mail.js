@@ -31,6 +31,13 @@ __decorate([
     Column(DataTypes.STRING)
 ], Mail.prototype, "content", void 0);
 __decorate([
+    AllowNull(false),
+    Column({
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    })
+], Mail.prototype, "seen", void 0);
+__decorate([
     ForeignKey(() => User)
 ], Mail.prototype, "userUuid", void 0);
 __decorate([

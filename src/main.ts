@@ -6,6 +6,7 @@ import Mail from "./models/Mail.js";
 import getConfig from "./config.js";
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
+import IMAPServer from "./imap/IMAPServer.js";
 
 export const sql = new Sequelize({
   database: getConfig("db_database"),
@@ -37,3 +38,4 @@ secure: if (getConfig("enable_pop3s", false) || getConfig("enable_smtps", false)
 
 if (getConfig("enable_smtp", true)) new SMTPServer(getConfig("smtp_port", 25)) // Port 25 for regular SMTP, 465 for SMTPS
 if (getConfig("enable_pop3", true)) new POP3Server(getConfig("pop3_port", 110), false) // Port 110 for regular POP3, 995 for POP3S
+new IMAPServer(143);

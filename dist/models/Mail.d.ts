@@ -5,6 +5,7 @@ export default class Mail extends Model {
     from: string;
     to: string;
     content: string;
+    seen: boolean;
     userUuid: string;
     user: User;
 }

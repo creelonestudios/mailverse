@@ -28,6 +28,13 @@ export default class Mail extends Model {
 	@AllowNull(false)
 	@Column(DataTypes.STRING)
 	declare content: string
+
+	@AllowNull(false)
+	@Column({
+		type: DataTypes.BOOLEAN,
+		defaultValue: false
+	})
+	declare seen: boolean
 	
 	@ForeignKey(() => User)
 	declare userUuid: string;
