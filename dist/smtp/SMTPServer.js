@@ -1,19 +1,27 @@
 import net from "net";
-import { writeFileSync, mkdirSync } from "fs";
+import tls from "tls";
 import getConfig from "../config.js";
 import User from "../models/User.js";
-import crypto from "node:crypto";
 import sendStatus from "./status.js";
 import Logger from "../Logger.js";
-const logger = new Logger("SMTP", "GREEN");
+import SMTP from "./SMTP.js";
+const logger = new Logger("SMTPServer", "GREEN");
 export default class SMTPServer {
     server;
-    constructor(port) {
-        this.server = net.createServer();
+    useTLS;
+    constructor(port, useTLS, key, cert) {
+        this.useTLS = useTLS;
+        if (useTLS && (!key || !cert))
+            throw new Error("TLS key or certificate not provided");
+        this.server = useTLS ? tls.createServer({
+            key,
+            cert
+        }, this.connection) : net.createServer();
         this.server.listen(port, () => {
             logger.log(`Server listening on port ${port}`);
         });
-        this.server.on("connection", this.connection);
+        if (!useTLS)
+            this.server.on("connection", this.connection);
     }
     connection(sock) {
         const status = sendStatus(sock);
@@ -34,7 +42,7 @@ export default class SMTPServer {
                 if (msg.endsWith(".\r\n")) {
                     receivingData = false;
                     info.content = info.content.substring(0, info.content.length - 3).replaceAll("\r\n", "\n");
-                    await this.handleNewMail(info);
+                    await SMTP.handleNewMail(info);
                     status(250);
                     logger.log("No longer receiving data -----------------------------------");
                     return;
@@ -111,41 +119,5 @@ export default class SMTPServer {
         sock.on("close", () => {
             logger.log("Client disconnected");
         });
-    }
-    async handleNewMail(info) {
-        const id = crypto.randomUUID();
-        mkdirSync(`mails/`, { recursive: true });
-        writeFileSync(`mails/${id}.txt`, info.content);
-        logger.log(`Saved mail to mails/${id}.txt`);
-        const serverName = getConfig("host");
-        if (info.from.endsWith("@" + serverName)) {
-            logger.log("Mail is from this server.");
-            if (!info.to.every(email => email.endsWith("@" + serverName))) { // if not all recipients are on this server
-                logger.log("Not all recipients are on this server. Will forward mail to other servers.");
-                logger.error("Forwarding mails to other servers is not implemented yet.");
-                // TODO: forward mail to other servers using SMTPClient
-                return;
-            }
-            logger.log("All recipients are on this server.");
-        }
-        else if (!info.to.every(email => email.endsWith("@" + serverName))) {
-            logger.warn("Not all recipients are from this server. Will NOT forward mail to other servers.");
-        }
-        const recipients = info.to.filter(email => email.endsWith("@" + serverName));
-        for (const rec of recipients) {
-            logger.log("Forwarding mail to " + rec);
-            const user = await User.findOne({ where: { username: rec.split("@")[0] } });
-            if (!user) {
-                logger.error("User " + rec + " does not exist.");
-                // Since we verify the recipients at the RCPT TO command, we should never get here, but you never know
-                continue;
-            }
-            await user.$create("mail", {
-                from: info.from,
-                to: rec,
-                content: id
-            });
-            logger.log("Forwarded mail to " + rec);
-        }
     }
 }

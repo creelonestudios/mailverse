@@ -35,7 +35,8 @@ secure: if (getConfig("pop3s.enabled", false) || getConfig("smtps.enabled", fals
 	}
 
 	if (getConfig("pop3s.enabled", false)) new POP3Server(getConfig("pop3s.port", 995), true, tlsKey, tlsCert) // Port 110 for regular POP3, 995 for POP3S
+	if (getConfig("smtps.enabled", false)) new SMTPServer(getConfig("smtps.port", 465), true, tlsKey, tlsCert) // Port 25 for regular SMTP, 465 for SMTPS
 }
 
-if (getConfig("smtp.enabled", true)) new SMTPServer(getConfig("smtp.port", 25)) // Port 25 for regular SMTP, 465 for SMTPS
+if (getConfig("smtp.enabled", true)) new SMTPServer(getConfig("smtp.port", 25), false) // Port 25 for regular SMTP, 465 for SMTPS
 if (getConfig("pop3.enabled", true)) new POP3Server(getConfig("pop3.port", 110), false) // Port 110 for regular POP3, 995 for POP3S
