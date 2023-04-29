@@ -32,7 +32,7 @@ export default class SMTP {
 		for(const rec of recipients) {
 			logger.log("Forwarding mail to " + rec);
 
-			const user = await User.findOne({ where: { username: rec.split("@")[0] } });
+			const user = await User.findOne({ where: { username: rec.substring(0, rec.lastIndexOf("@")) } });
 			if(!user) {
 				logger.error("User " + rec + " does not exist.")
 				// Since we verify the recipients at the RCPT TO command, we should never get here, but you never know
