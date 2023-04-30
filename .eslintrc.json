@@ -151,7 +151,7 @@
 		"no-ternary":                 "off",
 		"no-throw-literal":           "warn",
 		"no-undef-init":              "warn",
-		"no-undefined":               "error",
+		"no-undefined":               "off",
 		"no-underscore-dangle":       "error",
 		"no-unneeded-ternary":        "warn",
 		"no-unused-expressions":      "warn",
