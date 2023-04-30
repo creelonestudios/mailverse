@@ -15,6 +15,7 @@ const COLOR = {
 	GRAY, DARK, RED, GREEN, YELLOW, PINK, TEAL, WHITE
 }
 
+/* eslint no-console: "off" */
 export default class Logger {
 
 	constructor(private readonly actor: string, private readonly color: keyof typeof COLOR) {
@@ -45,6 +46,7 @@ export default class Logger {
 
 }
 
+/* eslint prefer-template: "off" */
 function time() {
 	const d = new Date()
 	const year  =  d.getUTCFullYear()
