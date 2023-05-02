@@ -20,12 +20,12 @@
   "dependencies": {
     "mariadb": "^3.1.1",
     "mysql2": "^3.2.4",
-    "sequelize": "^6.31.0",
+    "sequelize": "^6.31.1",
     "sequelize-typescript": "^2.1.5"
   },
   "devDependencies": {
     "@microsoft/eslint-formatter-sarif": "^3.0.0",
-    "@types/node": "^18.16.1",
+    "@types/node": "^18.16.3",
     "@typescript-eslint/eslint-plugin": "^5.59.1",
     "@typescript-eslint/parser": "^5.59.1",
     "eslint": "^8.39.0"
