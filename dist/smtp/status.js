@@ -67,8 +67,6 @@ export default function sendStatus(socket) {
 export function status(code, options) {
     if (typeof options == "string")
         options = { enhancedCode: options };
-    if (!(code in STATUS_CODES))
-        return `${code} ${options?.message}\r\n`;
     let statusCode = STATUS_CODES[code];
     let enhanced = false;
     if (options && options.enhancedCode) {
@@ -77,6 +75,8 @@ export function status(code, options) {
             enhanced = true;
         }
     }
+    if (!(code in STATUS_CODES) && !enhanced)
+        return `${code} ${options?.message}\r\n`;
     let message;
     if (statusCode.message?.includes("%") && options?.args)
         message = replaceArgs(statusCode, options.args, options?.message);
