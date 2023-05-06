@@ -152,7 +152,7 @@
 		"no-throw-literal":           "warn",
 		"no-undef-init":              "warn",
 		"no-undefined":               "off",
-		"no-underscore-dangle":       "error",
+		"no-underscore-dangle":       "warn",
 		"no-unneeded-ternary":        "warn",
 		"no-unused-expressions":      "warn",
 		"no-unused-labels":           "error",
