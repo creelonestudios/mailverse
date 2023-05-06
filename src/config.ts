@@ -18,7 +18,7 @@ export default function getConfig<T extends ConfigValue>(key: string, defaultVal
 		error = e
 	}
 	
-	value = value ?? process.env[key] ?? process.env[key.replaceAll(".", "_")] ?? defaultValue
+	value = value ?? getEnvVar(key) ?? defaultValue
 	//console.log("config:", key, value)
 	if (value != undefined) {
 		if (error) logger.warn(error)
@@ -29,6 +29,23 @@ export default function getConfig<T extends ConfigValue>(key: string, defaultVal
 	}
 
 	throw new Error(error) || new Error("Config key " + key + " not found")
+}
+
+function getEnvVar(key: string): ConfigValue | undefined {
+	const value = process.env[key] ?? process.env[key.replaceAll(".", "_")]
+	if (!value) return
+
+	return parseStringValue(value)
+}
+
+function parseStringValue(value: string): ConfigValue {
+	// boolean
+	if (value == "true") return true
+	else if (value == "false") return false
+	// number
+	else if (!isNaN(Number(value))) return Number(value)
+	// string
+	return value
 }
 
 function searchJsonKey(key: string, defaultValue?: ConfigValue): ConfigValue | undefined {

@@ -13,7 +13,7 @@ export default function getConfig(key, defaultValue) {
     catch (e) {
         error = e;
     }
-    value = value ?? process.env[key] ?? process.env[key.replaceAll(".", "_")] ?? defaultValue;
+    value = value ?? getEnvVar(key) ?? defaultValue;
     //console.log("config:", key, value)
     if (value != undefined) {
         if (error)
@@ -24,6 +24,24 @@ export default function getConfig(key, defaultValue) {
         return value;
     }
     throw new Error(error) || new Error("Config key " + key + " not found");
+}
+function getEnvVar(key) {
+    const value = process.env[key] ?? process.env[key.replaceAll(".", "_")];
+    if (!value)
+        return;
+    return parseStringValue(value);
+}
+function parseStringValue(value) {
+    // boolean
+    if (value == "true")
+        return true;
+    else if (value == "false")
+        return false;
+    // number
+    else if (!isNaN(Number(value)))
+        return Number(value);
+    // string
+    return value;
 }
 function searchJsonKey(key, defaultValue) {
     const path = key.split(".");
