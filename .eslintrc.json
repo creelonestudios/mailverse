@@ -60,7 +60,7 @@
 		"camelcase":                  "error",
 		"capitalized-comments":       "off",
 		"class-methods-use-this":     "off",
-		"complexity":                ["warn", 20],
+		"complexity":                ["warn", 24],
 		"consistent-return":          "error",
 		"consistent-this":           ["warn", "that"],
 		"curly":                     ["error", "multi-or-nest"],
