@@ -1,9 +1,9 @@
-import { DataTypes } from "sequelize";
-import { AllowNull, BelongsTo, Column, ForeignKey, Model, PrimaryKey, Table, Unique } from "sequelize-typescript";
-import User from "./User.js";
+import { DataTypes } from "sequelize"
+import { AllowNull, BelongsTo, Column, ForeignKey, Model, PrimaryKey, Table, Unique } from "sequelize-typescript"
+import User from "./User.js"
 
 @Table({
-	paranoid: true,
+	paranoid:  true,
 	tableName: "mails"
 })
 export default class Mail extends Model {
@@ -12,7 +12,7 @@ export default class Mail extends Model {
 	@Unique
 	@PrimaryKey
 	@Column({
-		type: DataTypes.UUID,
+		type:         DataTypes.UUID,
 		defaultValue: DataTypes.UUIDV4
 	})
 	declare uuid: string
@@ -28,11 +28,11 @@ export default class Mail extends Model {
 	@AllowNull(false)
 	@Column(DataTypes.STRING)
 	declare content: string
-	
+
 	@ForeignKey(() => User)
-	declare userUuid: string;
-	
+	declare userUuid: string
+
 	@BelongsTo(() => User)
-	declare user: User;
+	declare user: User
 
 }

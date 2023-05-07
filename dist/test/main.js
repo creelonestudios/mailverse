@@ -1,10 +1,10 @@
 import Logger from "../Logger.js";
 import { status } from "../smtp/status.js";
 const ESC = "\u001b";
-const RED = ESC + "[91m";
-const YELLOW = ESC + "[93m";
-const BLUE = ESC + "[94m";
-const GREEN = ESC + "[92m";
+const RED = `${ESC}[91m`;
+const YELLOW = `${ESC}[93m`;
+const BLUE = `${ESC}[94m`;
+const GREEN = `${ESC}[92m`;
 let errors = 0;
 const logger = new Logger("test", "TEAL");
 logger.debug("debug log");
@@ -18,8 +18,8 @@ const smtpStatusTestCases = [
     ["530 5.7.0", "530 5.7.0 Authentication required\r\n"],
     ["538 5.7.11", "538 5.7.11 Encryption required for requested authentication mechanism\r\n"]
 ];
-for (let e of smtpStatusTestCases) {
-    const args = (e[0] + "").split(" ");
+for (const e of smtpStatusTestCases) {
+    const args = (`${e[0]}`).split(" ");
     const statusMsg = status(Number(args[0]), args[1]);
     logger.log(`SMTP ${e[0]}: [${statusMsg.substring(0, statusMsg.length - 2)}]`);
     if (statusMsg != e[1]) {

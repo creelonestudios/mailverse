@@ -8,18 +8,16 @@ const YELLOW = ESC + "[93m";
 const PINK = ESC + "[95m";
 const TEAL = ESC + "[96m";
 const WHITE = ESC + "[97m";
-const COLOR = {
-    GRAY, DARK, RED, GREEN, YELLOW, PINK, TEAL, WHITE
-};
+const COLOR = { GRAY, DARK, RED, GREEN, YELLOW, PINK, TEAL, WHITE };
+/* eslint no-console: "off" */
 export default class Logger {
     actor;
     color;
     constructor(actor, color) {
         this.actor = actor;
         this.color = color;
-        if (!global.debug) {
+        if (!global.debug)
             this.debug = () => { }; // only enable debug logs when debugging is on
-        }
     }
     log(...message) {
         console.log(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${GRAY}`, message.join(" "));
@@ -37,6 +35,7 @@ export default class Logger {
         console.trace(`${WHITE}[${DARK}${time()}${WHITE}] [${COLOR[this.color]}${this.actor}${WHITE}]${WHITE}`, message.join(" "));
     }
 }
+/* eslint prefer-template: "off" */
 function time() {
     const d = new Date();
     const year = d.getUTCFullYear();
