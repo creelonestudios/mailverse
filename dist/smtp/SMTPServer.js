@@ -109,12 +109,10 @@ export default class SMTPServer {
                 // This command is used to verify if a user exists, but that can be a security risk + it is also done with RCPT TO anyway
                 status(502);
             }
-            else if (msg.startsWith("EXPN")) {
+            else if (msg.startsWith("EXPN"))
                 status(502);
-            }
-            else {
+            else
                 status(502);
-            }
         });
         sock.on("close", () => {
             logger.log("Client disconnected");

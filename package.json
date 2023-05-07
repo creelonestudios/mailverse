@@ -4,7 +4,9 @@
   "description": "",
   "main": "dist/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "stylefix": "npx eslint ./src/ --fix",
+	"style": "npx eslint ./src/",
+	"build": "npm run stylefix & tsc"
   },
   "repository": {
     "type": "git",

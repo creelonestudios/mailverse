@@ -8,5 +8,5 @@ export default function getConfig(key, defaultValue) {
         return process.env[key];
     if (defaultValue != undefined)
         return defaultValue;
-    throw new Error("Config key " + key + " not found"); // TODO: better error handling?
+    throw new Error(`Config key ${key} not found`); // TODO: better error handling?
 }

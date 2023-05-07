@@ -1,6 +1,6 @@
 import POP3Server from "./pop3/POP3Server.js";
 import SMTPServer from "./smtp/SMTPServer.js";
-import { Sequelize } from 'sequelize-typescript';
+import { Sequelize } from "sequelize-typescript";
 import User from "./models/User.js";
 import Mail from "./models/Mail.js";
 import getConfig from "./config.js";
@@ -19,7 +19,7 @@ export const sql = new Sequelize({
 // 	password: "1234"
 // })
 secure: if (getConfig("enable_pop3s", false) || getConfig("enable_smtps", false)) {
-    let tlsKey, tlsCert;
+    let tlsCert, tlsKey;
     try {
         tlsKey = await readFile(getConfig("tls_key", "cert/privkey.pem"));
         tlsCert = await readFile(getConfig("tls_cert", "cert/fullchain.pem"));

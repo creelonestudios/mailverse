@@ -8,7 +8,7 @@ const STATUS_SUBJECTS = [
     { code: 6, name: "Message Content or Media" },
     { code: 7, name: "Security or Policy" }
 ];
-let ok = true;
+const ok = true;
 const STATUS_CODES = {
     // OK
     211: { code: 211, ok },
@@ -91,9 +91,8 @@ export function status(code, options) {
 function replaceArgs(statusCode, args, msg) {
     if (!("message" in statusCode))
         return msg || "";
-    let message = statusCode.message;
-    for (let i = 0; message.includes("%"); i++) {
+    const message = statusCode.message;
+    for (let i = 0; message.includes("%"); i++)
         message.replace("%", args[i] ?? msg);
-    }
     return message;
 }
