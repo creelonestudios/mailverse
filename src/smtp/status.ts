@@ -99,7 +99,6 @@ export default function sendStatus(socket: net.Socket) {
 
 export function status(code: number, options?: StatusOptions | EnhancedCode) {
 	if (typeof options == "string") options = { enhancedCode: options }
-	if (!(code in STATUS_CODES)) return `${code} ${options?.message}\r\n`
 
 	let statusCode = STATUS_CODES[code]
 	let enhanced = false
@@ -110,6 +109,8 @@ export function status(code: number, options?: StatusOptions | EnhancedCode) {
 			enhanced = true
 		}
 	}
+
+	if (!(code in STATUS_CODES) && !enhanced) return `${code} ${options?.message}\r\n`
 
 	let message: string
 	if (statusCode.message?.includes("%") && options?.args) message = replaceArgs(statusCode, options.args, options?.message)

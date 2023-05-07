@@ -4,14 +4,16 @@ import { Sequelize } from "sequelize-typescript"
 import User from "./models/User.js"
 import Mail from "./models/Mail.js"
 import getConfig from "./config.js"
-import { existsSync } from "node:fs"
 import { readFile } from "node:fs/promises"
+import { Dialect } from "sequelize"
+
+global.debug = getConfig("debug", false) as any
 
 export const sql = new Sequelize({
-	database: getConfig("db_database"),
-	dialect:  getConfig("db_dialect"),
-	username: getConfig("db_username"),
-	password: getConfig("db_password"),
+	database: getConfig<string>("db.database"),
+	dialect:  getConfig<Dialect>("db.dialect"),
+	username: getConfig<string>("db.username"),
+	password: getConfig<string>("db.password"),
 	models:   [User, Mail]
 })
 
@@ -23,19 +25,19 @@ export const sql = new Sequelize({
 // 	password: "1234"
 // })
 
-secure: if (getConfig("enable_pop3s", false) || getConfig("enable_smtps", false)) {
+secure: if (getConfig("pop3s.enabled", false) || getConfig("smtps.enabled", false)) {
 	let tlsCert: Buffer, tlsKey: Buffer
 
 	try {
-		tlsKey  = await readFile(getConfig("tls_key",  "cert/privkey.pem"))
-		tlsCert = await readFile(getConfig("tls_cert", "cert/fullchain.pem"))
+		tlsKey  = await readFile(getConfig("tls.key",  "cert/privkey.pem"))
+		tlsCert = await readFile(getConfig("tls.cert", "cert/fullchain.pem"))
 	} catch (ignore) {
 		break secure
 	}
 
-	if (getConfig("enable_pop3s", false)) new POP3Server(getConfig("pop3s_port", 995), true, tlsKey, tlsCert) // Port 110 for regular POP3, 995 for POP3S
-	if (getConfig("enable_smtps", false)) new SMTPServer(getConfig("smtps_port", 465), true, tlsKey, tlsCert) // Port 25 for regular SMTP, 465 for SMTPS
+	if (getConfig("pop3s.enabled", false)) new POP3Server(getConfig("pop3s.port", 995), true, tlsKey, tlsCert) // Port 110 for regular POP3, 995 for POP3S
+	if (getConfig("smtps.enabled", false)) new SMTPServer(getConfig("smtps.port", 465), true, tlsKey, tlsCert) // Port 25 for regular SMTP, 465 for SMTPS
 }
 
-if (getConfig("enable_smtp", true)) new SMTPServer(getConfig("smtp_port", 25), false) // Port 25 for regular SMTP, 465 for SMTPS
-if (getConfig("enable_pop3", true)) new POP3Server(getConfig("pop3_port", 110), false) // Port 110 for regular POP3, 995 for POP3S
+if (getConfig("smtp.enabled", true)) new SMTPServer(getConfig("smtp.port", 25), false) // Port 25 for regular SMTP, 465 for SMTPS
+if (getConfig("pop3.enabled", true)) new POP3Server(getConfig("pop3.port", 110), false) // Port 110 for regular POP3, 995 for POP3S

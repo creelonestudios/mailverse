@@ -26,7 +26,7 @@ export default class SMTPServer {
     connection(sock) {
         const status = sendStatus(sock);
         logger.log("Client connected");
-        status(220, { message: getConfig("smtp_header", "SMTP Server ready") });
+        status(220, { message: getConfig("smtp.header", "SMTP Server ready") });
         let receivingData = false;
         let info = {
             from: "",

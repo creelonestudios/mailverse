@@ -6,7 +6,8 @@
   "scripts": {
     "stylefix": "npx eslint ./src/ --fix",
 	"style": "npx eslint ./src/",
-	"build": "npm run stylefix & tsc"
+	"build": "npm run stylefix & tsc",
+    "test": "node ./dist/test/main.js"
   },
   "repository": {
     "type": "git",
