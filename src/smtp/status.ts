@@ -19,6 +19,7 @@ export interface EnhancedStatusCode extends StatusCode {
 
 type EnhancedCode = `${bigint}.${bigint}.${bigint}`
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const STATUS_SUBJECTS: Record<number, EnhancedStatusSubject> = [
 	{ code: 0, name: "Other or Undefined" },
 	{ code: 1, name: "Addressing" },

@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const STATUS_SUBJECTS = [
     { code: 0, name: "Other or Undefined" },
     { code: 1, name: "Addressing" },

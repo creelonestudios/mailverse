@@ -149,7 +149,7 @@
 		"no-shadow":                  "warn",
 		"no-shadow-restricted-names": "error",
 		"no-ternary":                 "off",
-		"no-throw-literal":           "warn",
+		"no-throw-literal":           "off",
 		"no-undef-init":              "warn",
 		"no-undefined":               "off",
 		"no-underscore-dangle":       "warn",

@@ -1,10 +1,11 @@
+import Mail from "./models/Mail.js";
 import POP3Server from "./pop3/POP3Server.js";
 import SMTPServer from "./smtp/SMTPServer.js";
 import { Sequelize } from "sequelize-typescript";
 import User from "./models/User.js";
-import Mail from "./models/Mail.js";
 import getConfig from "./config.js";
 import { readFile } from "node:fs/promises";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 global.debug = getConfig("debug", false);
 export const sql = new Sequelize({
     database: getConfig("db.database"),
