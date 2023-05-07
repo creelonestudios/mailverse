@@ -1,2 +1,4 @@
 export declare const config: any;
-export default function getConfig(key: string, defaultValue?: any): any;
+type ConfigValue = string | number | boolean;
+export default function getConfig<T extends ConfigValue>(key: string, defaultValue?: T): T;
+export {};
