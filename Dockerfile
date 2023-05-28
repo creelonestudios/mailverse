@@ -11,6 +11,6 @@ COPY . /app
 # SMTP, SMTPS, POP3, POP3S
 EXPOSE 25 465 110 995
 
-VOLUME ["/app/mails"]
+VOLUME ["/app/mails", "/app/config.json"]
 
 CMD ["node", "."]
