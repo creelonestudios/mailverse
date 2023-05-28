@@ -13,7 +13,8 @@ export const sql = new Sequelize({
     password: getConfig("db.password"),
     models: [User, Mail]
 });
-// await sql.sync({ alter: true })
+if (process.argv.includes("sync-db"))
+    await sql.sync({ alter: true });
 // await User.create({
 // 	name: "Cfp",
 // 	username: "cfp",
