@@ -1,5 +1,5 @@
-import { DataTypes } from "sequelize"
 import { AllowNull, BelongsTo, Column, ForeignKey, Model, PrimaryKey, Table, Unique } from "sequelize-typescript"
+import { DataTypes } from "sequelize"
 import User from "./User.js"
 
 @Table({

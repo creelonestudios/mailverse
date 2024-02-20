@@ -1,13 +1,10 @@
-import net from "net"
-import tls from "tls"
-import { mkdirSync, writeFileSync } from "fs"
-import getConfig from "../config.js"
-import Mail from "../models/Mail.js"
-import User from "../models/User.js"
-import crypto from "node:crypto"
-import sendStatus from "./status.js"
 import Logger from "../Logger.js"
 import SMTP from "./SMTP.js"
+import User from "../models/User.js"
+import getConfig from "../config.js"
+import net from "net"
+import sendStatus from "./status.js"
+import tls from "tls"
 
 const logger = new Logger("SMTPServer", "GREEN")
 
@@ -90,11 +87,11 @@ export default class SMTPServer {
 				}
 
 				const email = msg.split(":")[1].split(">")[0].replace("<", "")
-				const username = email.split("@")[0]
-				const domain = email.split("@")[1]
+				const [username, domain] = email.split("@")
 
 				if (domain != getConfig("host")) {
-					// The spec says we MAY forward the message ourselves, but simply returning 550 is fine, and the client should handle it
+					// The spec says we MAY forward the message ourselves,
+					// but simply returning 550 is fine, and the client should handle it
 					status(550)
 
 					return
@@ -127,7 +124,8 @@ export default class SMTPServer {
 				status(221, "2.0.0")
 				sock.end()
 			} else if (msg.startsWith("VRFY")) {
-				// This command is used to verify if a user exists, but that can be a security risk + it is also done with RCPT TO anyway
+				// This command is used to verify if a user exists,
+				// but that can be a security risk + it is also done with RCPT TO anyway
 				status(502)
 			} else if (msg.startsWith("EXPN")) status(502)
 			 else status(502)

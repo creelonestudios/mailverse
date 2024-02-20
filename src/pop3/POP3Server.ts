@@ -1,11 +1,11 @@
-import net from "net"
-import tls from "tls"
+import Logger from "../Logger.js"
+import Mail from "../models/Mail.js"
 import User from "../models/User.js"
 import { createHash } from "node:crypto"
-import Mail from "../models/Mail.js"
-import Logger from "../Logger.js"
 import getConfig from "../config.js"
+import net from "net"
 import { readFile } from "fs/promises"
+import tls from "tls"
 
 const logger = new Logger("POP3", "YELLOW")
 
@@ -53,16 +53,16 @@ export default class POP3Server {
 					username = username.substring(0, username.lastIndexOf("@"))
 				}
 				if (username.startsWith("\"") && username.endsWith("\"")) username = username.substring(1, username.length-1)
-				 else if (username.includes("@")) {
+				else if (username.includes("@")) {
 					// this is not allowed
 					return void sock.write("-ERR Invalid username or password\r\n")
 				}
 
-				const _user = await User.findOne({ where: { username } })
+				const dbuser = await User.findOne({ where: { username } })
 
-				if (!_user) return void sock.write("-ERR Invalid username or password\r\n")
+				if (!dbuser) return void sock.write("-ERR Invalid username or password\r\n")
 
-				user = _user
+				user = dbuser
 				sock.write("+OK\r\n")
 			} else if (msg.startsWith("PASS")) { // client gives password
 				if (args.length < 1) return void sock.write("-ERR Invalid username or password\r\n")
@@ -92,7 +92,7 @@ export default class POP3Server {
 			} else if (msg.startsWith("RETR")) {
 				if (args.length < 1) return void sock.write("-ERR No message specified\r\n")
 
-				const mail = await user.getMail(parseInt(args[0].trim()))
+				const mail = await user.getMail(parseInt(args[0].trim(), 10))
 
 				if (!mail) return void sock.write("-ERR No such message\r\n")
 
@@ -102,7 +102,7 @@ export default class POP3Server {
 			} else if (msg.startsWith("TOP")) {
 				if (args.length < 2) return void sock.write("-ERR No message specified\r\n")
 
-				const mail = await user.getMail(parseInt(args[0].trim()))
+				const mail = await user.getMail(parseInt(args[0].trim(), 10))
 
 				if (!mail) return void sock.write("-ERR No such message\r\n")
 
@@ -120,7 +120,7 @@ export default class POP3Server {
 			} else if (msg.startsWith("DELE")) {
 				if (args.length < 1) return void sock.write("-ERR No message specified\r\n")
 
-				const mail = await user.getMail(parseInt(args[0].trim()))
+				const mail = await user.getMail(parseInt(args[0].trim(), 10))
 
 				if (!mail) return void sock.write("-ERR No such message\r\n")
 
@@ -129,7 +129,11 @@ export default class POP3Server {
 			} else if (msg.startsWith("NOOP")) { // this is used to keep the connection alive
 				sock.write("+OK\r\n")
 			} else if (msg.startsWith("RSET")) {
-				for (const mail of markedForDeletion) await mail.restore()
+				const restores = []
+
+				for (const mail of markedForDeletion) restores.push(mail.restore())
+
+				await Promise.all(restores)
 
 				sock.write("+OK\r\n")
 			}

@@ -1,8 +1,8 @@
 import { mkdir, writeFile } from "fs/promises"
-import getConfig from "../config.js"
 import Logger from "../Logger.js"
 import User from "../models/User.js"
 import crypto from "node:crypto"
+import getConfig from "../config.js"
 
 const logger = new Logger("SMTP", "GREEN")
 
@@ -32,10 +32,9 @@ export default class SMTP {
 			logger.log("All recipients are on this server.")
 		} else if (!info.to.every(email => email.endsWith(`@${serverName}`))) logger.warn("Not all recipients are from this server. Will NOT forward mail to other servers.")
 
-
 		const recipients = info.to.filter(email => email.endsWith(`@${serverName}`))
 
-		for (const rec of recipients) {
+		recipients.forEach(async rec => {
 			logger.log(`Forwarding mail to ${rec}`)
 			const user = await User.findOne({ where: { username: rec.substring(0, rec.lastIndexOf("@")) } })
 
@@ -43,7 +42,7 @@ export default class SMTP {
 				logger.error(`User ${rec} does not exist.`)
 
 				// Since we verify the recipients at the RCPT TO command, we should never get here, but you never know
-				continue
+				return
 			}
 
 			await user.$create("mail", {
@@ -53,7 +52,7 @@ export default class SMTP {
 			})
 
 			logger.log(`Forwarded mail to ${rec}`)
-		}
+		})
 	}
 
 }

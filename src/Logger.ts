@@ -1,4 +1,6 @@
 const ESC = "\u001b"
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const RESET = ESC + "[m"
 const GRAY  = ESC + "[37m"
 const DARK  = ESC + "[90m"

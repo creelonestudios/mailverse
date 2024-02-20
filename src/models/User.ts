@@ -1,5 +1,5 @@
-import { DataTypes } from "sequelize"
 import { AllowNull, Column, HasMany, Model, PrimaryKey, Table, Unique } from "sequelize-typescript"
+import { DataTypes } from "sequelize"
 import Mail from "./Mail.js"
 import { createHash } from "node:crypto"
 
