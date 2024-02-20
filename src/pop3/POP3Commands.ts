@@ -1,7 +1,7 @@
+import * as argon2 from "argon2"
 import Mail from "../models/Mail.js"
 import { Socket } from "net"
 import User from "../models/User.js"
-import { createHash } from "crypto"
 import getConfig from "../config.js"
 import { readFile } from "fs/promises"
 
@@ -55,17 +55,13 @@ const USER = new POP3Command("USER", "Set username", false, async (sock: Socket,
 	sock.write("+OK\r\n")
 })
 
-// eslint-disable-next-line require-await
 const PASS = new POP3Command("PASS", "Set password and log in", false, async (sock: Socket, args: string[], state: POP3ConnectionState) => {
 	if (args.length < 1 || !state.user) return void sock.write("-ERR Invalid username or password\r\n")
 
 	const password = args[0].trim()
-	const hash = createHash("sha256")
+	const valid = await argon2.verify(state.user.password, password)
 
-	hash.update(password)
-	const hashedPassword = hash.digest("hex")
-
-	if (state.user.password == hashedPassword) {
+	if (valid) {
 		state.login = true
 		sock.write("+OK Logged in\r\n")
 	} else sock.write("-ERR Invalid username or password\r\n")
