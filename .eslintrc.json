@@ -61,7 +61,7 @@
 		"capitalized-comments":       "off",
 		"class-methods-use-this":     "off",
 		"complexity":                ["warn", 24],
-		"consistent-return":          "error",
+		"consistent-return":          "off",
 		"consistent-this":           ["warn", "that"],
 		"curly":                     ["error", "multi-or-nest"],
 		"default-case":               "off",
