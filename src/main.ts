@@ -1,14 +1,15 @@
-import { Dialect } from "sequelize"
-import Mail from "./models/Mail.js"
-import POP3Server from "./pop3/POP3Server.js"
-import SMTPServer from "./smtp/SMTPServer.js"
-import { Sequelize } from "sequelize-typescript"
-import User from "./models/User.js"
-import getConfig from "./config.js"
-import { readFile, writeFile } from "node:fs/promises"
-import repl from "node:repl"
-import IMAPClient from "./imap/IMAPClient.js"
+// import { Dialect } from "sequelize"
+// import Mail from "./models/Mail.js"
+// import POP3Server from "./pop3/POP3Server.js"
+// import SMTPServer from "./smtp/SMTPServer.js"
+// import { Sequelize } from "sequelize-typescript"
+// import User from "./models/User.js"
 import POP3Client from "./pop3/POP3Client.js"
+import getConfig from "./config.js"
+import { writeFile } from "node:fs/promises"
+
+// import { readFile } from "node:fs/promises"
+// import IMAPClient from "./imap/IMAPClient.js"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 global.debug = getConfig("debug", false) as any
