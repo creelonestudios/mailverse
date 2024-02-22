@@ -19,6 +19,7 @@ export interface EnhancedStatusCode extends StatusCode {
 
 type EnhancedCode = `${bigint}.${bigint}.${bigint}`
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const STATUS_SUBJECTS: Record<number, EnhancedStatusSubject> = [
 	{ code: 0, name: "Other or Undefined" },
 	{ code: 1, name: "Addressing" },
@@ -30,7 +31,7 @@ const STATUS_SUBJECTS: Record<number, EnhancedStatusSubject> = [
 	{ code: 7, name: "Security or Policy" }
 ]
 
-let ok = true
+const ok = true
 const STATUS_CODES: Record<number, StatusCode> = {
 	// OK
 	211: { code: 211, ok }, // system status, or system help reply
@@ -44,12 +45,14 @@ const STATUS_CODES: Record<number, StatusCode> = {
 	// intermediate OK
 	334: { code: 334, ok }, // base64-encoded server challenge
 	354: { code: 354, ok, message: "Start mail input; end with <CRLF>.<CRLF>" },
+
 	// transient NOT OK
 	421: { code: 421, ok: false, message: "Service not available, closing transmission channel" },
 	450: { code: 450, ok: false, message: "Requested mail action not taken: mailbox unavailable" }, // mailbox busy or temp. blocked
 	451: { code: 451, ok: false, message: "Requested action aborted: local error in processing" },
 	452: { code: 452, ok: false, message: "Requested action not taken: insufficient system storage" },
 	455: { code: 455, ok: false, message: "Server unable to accommodate parameters" },
+
 	// permanent NOT OK
 	500: { code: 500, ok: false, message: "Syntax error, command unrecognized" },
 	501: { code: 501, ok: false, message: "Syntax error in parameters or arguments" },
@@ -97,6 +100,7 @@ export default function sendStatus(socket: net.Socket) {
 
 export function status(code: number, options?: StatusOptions | EnhancedCode) {
 	if (typeof options == "string") options = { enhancedCode: options }
+
 	let statusCode = STATUS_CODES[code]
 	let enhanced = false
 
@@ -115,6 +119,7 @@ export function status(code: number, options?: StatusOptions | EnhancedCode) {
 
 	if (enhanced) {
 		const esc = statusCode as EnhancedStatusCode
+
 		return `${esc.code} ${esc.class}.${esc.subject}.${esc.detail} ${message}\r\n`
 	}
 
@@ -124,10 +129,10 @@ export function status(code: number, options?: StatusOptions | EnhancedCode) {
 function replaceArgs(statusCode: StatusCode, args: string[], msg?: string): string {
 	if (!("message" in statusCode)) return msg || ""
 
-	let message = statusCode.message as string
-	for (let i = 0; message.includes("%"); i++) {
-		message.replace("%", args[i] ?? msg)
-	}
+	const message = statusCode.message as string
+
+	for (let i = 0; message.includes("%"); i++) message.replace("%", args[i] ?? msg)
+
 
 	return message
 }

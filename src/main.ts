@@ -1,21 +1,22 @@
+import { Dialect } from "sequelize"
+import Mail from "./models/Mail.js"
 import POP3Server from "./pop3/POP3Server.js"
 import SMTPServer from "./smtp/SMTPServer.js"
-import { Sequelize } from 'sequelize-typescript';
-import User from "./models/User.js";
-import Mail from "./models/Mail.js";
-import getConfig from "./config.js";
-import { readFile } from "node:fs/promises";
-import { Dialect } from "sequelize"
+import { Sequelize } from "sequelize-typescript"
+import User from "./models/User.js"
+import getConfig from "./config.js"
+import { readFile } from "node:fs/promises"
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 global.debug = getConfig("debug", false) as any
 
 export const sql = new Sequelize({
-  database: getConfig<string>("db.database"),
-  dialect: getConfig<Dialect>("db.dialect"),
-  username: getConfig<string>("db.username"),
-  password: getConfig<string>("db.password"),
-  models: [User, Mail]
-});
+	database: getConfig<string>("db.database"),
+	dialect:  getConfig<Dialect>("db.dialect"),
+	username: getConfig<string>("db.username"),
+	password: getConfig<string>("db.password"),
+	models:   [User, Mail]
+})
 
 // await sql.sync({ alter: true })
 
@@ -26,7 +27,8 @@ export const sql = new Sequelize({
 // })
 
 secure: if (getConfig("pop3s.enabled", false) || getConfig("smtps.enabled", false)) {
-	let tlsKey: Buffer, tlsCert: Buffer
+	let tlsCert: Buffer, tlsKey: Buffer
+
 	try {
 		tlsKey  = await readFile(getConfig("tls.key",  "cert/privkey.pem"))
 		tlsCert = await readFile(getConfig("tls.cert", "cert/fullchain.pem"))

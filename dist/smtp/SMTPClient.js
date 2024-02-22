@@ -13,10 +13,10 @@ export default class SMTPClient {
         sock.on("connect", async () => {
             logger.log("Connected to server");
             sock.write(`EHLO ${getConfig("host", "localhost")}\r\n`);
-            sock.write("MAIL FROM:<" + from + ">\r\n");
-            sock.write("RCPT TO:<" + to + ">\r\n");
+            sock.write(`MAIL FROM:<${from}>\r\n`);
+            sock.write(`RCPT TO:<${to}>\r\n`);
             sock.write("DATA\r\n");
-            sock.write(content + "\r\n.\r\n");
+            sock.write(`${content}\r\n.\r\n`);
             sock.write("QUIT\r\n");
         });
     }

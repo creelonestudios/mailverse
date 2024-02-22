@@ -15,10 +15,10 @@ export default class POP3Server {
             throw new Error("TLS key or certificate not provided");
         this.server = useTLS ? tls.createServer({
             key,
-            cert,
+            cert
         }, this.connection) : net.createServer();
         this.server.listen(port, () => {
-            logger.log("Server listening on port " + port);
+            logger.log(`Server listening on port ${port}`);
         });
         if (!useTLS)
             this.server.on("connection", this.connection);
@@ -31,7 +31,7 @@ export default class POP3Server {
         const markedForDeletion = [];
         sock.on("data", async (data) => {
             const msg = data.toString();
-            logger.log("Received data: " + msg);
+            logger.log(`Received data: ${msg}`);
             const args = msg.split(" ").slice(1);
             if (msg.startsWith("CAPA")) { // list capabilities
                 sock.write("+OK Capability list follows\r\nUSER\r\n.\r\n");
@@ -41,19 +41,17 @@ export default class POP3Server {
                     return void sock.write("-ERR Invalid username or password\r\n");
                 username = args[0].trim().toLowerCase();
                 if (username.includes("@")) {
-                    if (!username.endsWith("@" + getConfig("host", "localhost"))) {
+                    if (!username.endsWith(`@${getConfig("host", "localhost")}`))
                         return void sock.write("-ERR Invalid username or password\r\n");
-                    }
                     username = username.substring(0, username.lastIndexOf("@"));
                 }
-                if (username.startsWith("\"") && username.endsWith("\"")) {
+                if (username.startsWith("\"") && username.endsWith("\""))
                     username = username.substring(1, username.length - 1);
-                }
                 else if (username.includes("@")) {
                     // this is not allowed
                     return void sock.write("-ERR Invalid username or password\r\n");
                 }
-                let _user = await User.findOne({ where: { username: username } });
+                const _user = await User.findOne({ where: { username } });
                 if (!_user)
                     return void sock.write("-ERR Invalid username or password\r\n");
                 user = _user;
@@ -66,16 +64,14 @@ export default class POP3Server {
                 const hash = createHash("sha256");
                 hash.update(password);
                 const hashedPassword = hash.digest("hex");
-                if (user.password == hashedPassword) {
+                if (user.password == hashedPassword)
                     sock.write("+OK Logged in\r\n");
-                }
-                else {
+                else
                     sock.write("-ERR Invalid username or password\r\n");
-                }
             }
             else if (msg.startsWith("STAT")) { // get number of messages and total size
                 const mails = await user.$count("mails");
-                sock.write("+OK " + mails + "\r\n");
+                sock.write(`+OK ${mails}\r\n`);
             }
             else if (msg.startsWith("QUIT")) {
                 sock.write("+OK Bye\r\n");
@@ -83,10 +79,9 @@ export default class POP3Server {
             }
             else if (msg.startsWith("LIST")) {
                 const mails = await user.$get("mails");
-                sock.write("+OK " + mails.length + " messages\r\n");
-                for (let i = 0; i < mails.length; i++) {
-                    sock.write(i + "\r\n");
-                }
+                sock.write(`+OK ${mails.length} messages\r\n`);
+                for (let i = 0; i < mails.length; i++)
+                    sock.write(`${i}\r\n`);
                 sock.write(".\r\n");
             }
             else if (msg.startsWith("RETR")) {
@@ -95,8 +90,8 @@ export default class POP3Server {
                 const mail = await user.getMail(parseInt(args[0].trim()));
                 if (!mail)
                     return void sock.write("-ERR No such message\r\n");
-                const content = await readFile("mails/" + mail.content + ".txt", "utf-8");
-                sock.write("+OK\r\n" + content + "\r\n.\r\n");
+                const content = await readFile(`mails/${mail.content}.txt`, "utf-8");
+                sock.write(`+OK\r\n${content}\r\n.\r\n`);
             }
             else if (msg.startsWith("TOP")) {
                 if (args.length < 2)
@@ -104,16 +99,15 @@ export default class POP3Server {
                 const mail = await user.getMail(parseInt(args[0].trim()));
                 if (!mail)
                     return void sock.write("-ERR No such message\r\n");
-                const content = await readFile("mails/" + mail.content + ".txt", "utf-8");
+                const content = await readFile(`mails/${mail.content}.txt`, "utf-8");
                 const lines = content.split("\r\n");
                 const top = lines.slice(0, 10).join("\r\n");
-                sock.write("+OK\r\n" + top + "\r\n.\r\n");
+                sock.write(`+OK\r\n${top}\r\n.\r\n`);
             }
             else if (msg.startsWith("UIDL")) { // get unique id of message
                 const mails = await user.$get("mails");
-                for (let i = 0; i < mails.length; i++) {
-                    sock.write(i + " " + mails[i].uuid + "\r\n");
-                }
+                for (let i = 0; i < mails.length; i++)
+                    sock.write(`${i} ${mails[i].uuid}\r\n`);
                 sock.write(".\r\n");
             }
             else if (msg.startsWith("DELE")) {
@@ -129,9 +123,8 @@ export default class POP3Server {
                 sock.write("+OK\r\n");
             }
             else if (msg.startsWith("RSET")) {
-                for (const mail of markedForDeletion) {
+                for (const mail of markedForDeletion)
                     await mail.restore();
-                }
                 sock.write("+OK\r\n");
             }
         });
