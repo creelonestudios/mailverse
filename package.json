@@ -25,7 +25,7 @@
     "mariadb": "^3.1.2",
     "mysql2": "^3.3.0",
     "sequelize": "^6.31.1",
-    "sequelize-typescript": "^2.1.5"
+    "sequelize-typescript": "^2.1.6"
   },
   "devDependencies": {
     "@microsoft/eslint-formatter-sarif": "^3.0.0",
