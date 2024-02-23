@@ -21,23 +21,23 @@ Mailverse is a new and modern email server written in NodeJS. It is designed to 
 ```yml
 version: "3"
 services:
-	mailverse:
-		image: mailverse/mailverse
-		ports:
-			- "25:25"
-			- "110:110"
-			- "465:465"
-			- "995:995"
-		volumes:
-			- ./mails:/app/mails
-			- ./config.json:/app/config.json
-	db:
-		image: mariadb
-		environment:
-			- MYSQL_ROOT_PASSWORD=mailverse
-			- MYSQL_DATABASE=mailverse
-			- MYSQL_USER=mailverse
-			- MYSQL_PASSWORD=mailverse
+  mailverse:
+    image: mailverse/mailverse
+    ports:
+      - "25:25"
+      - "110:110"
+      - "465:465"
+      - "995:995"
+    volumes:
+      - ./mails:/app/mails
+      - ./config.json:/app/config.json
+  db:
+    image: mariadb
+    environment:
+      - MYSQL_ROOT_PASSWORD=mailverse
+      - MYSQL_DATABASE=mailverse
+      - MYSQL_USER=mailverse
+      - MYSQL_PASSWORD=mailverse
 ```
 
 ### Manual
