@@ -1,17 +1,13 @@
 import { Dialect } from "sequelize"
 import Mail from "./models/Mail.js"
 import POP3Server from "./pop3/POP3Server.js"
+import POPUpstream from "./upstreams/POPUpstream.js"
 import SMTPServer from "./smtp/SMTPServer.js"
+import SMTPUpstream from "./upstreams/SMTPUpstream.js"
 import { Sequelize } from "sequelize-typescript"
 import User from "./models/User.js"
-import POP3Client from "./pop3/POP3Client.js"
 import getConfig from "./config.js"
-// import { writeFile } from "node:fs/promises"
-import POPUpstream from "./upstreams/POPUpstream.js"
 import { readFile } from "node:fs/promises"
-import SMTPClient from "./smtp/SMTPClient.js"
-import SMTPUpstream from "./upstreams/SMTPUpstream.js"
-// import IMAPClient from "./imap/IMAPClient.js"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 global.debug = getConfig("debug", false) as any
@@ -49,70 +45,22 @@ secure: if (getConfig("pop3s.enabled", false) || getConfig("smtps.enabled", fals
 if (getConfig("smtp.enabled", true)) new SMTPServer(getConfig("smtp.port", 25), false) // Port 25 for regular SMTP, 465 for SMTPS
 if (getConfig("pop3.enabled", true)) new POP3Server(getConfig("pop3.port", 110), false) // Port 110 for regular POP3, 995 for POP3S
 
-// repl.start()
-// const client = new IMAPClient("imap.ionos.de", 993, true)
-
-// await client.login("<REDACTED>")
-
-// // await client.namespaces()
-// // await client.listInboxes("", "/")
-// await client.selectInbox("INBOX/")
-// const searchResult = await client.search("ALL")
-// const ids = searchResult.replace("SEARCH ", "").replace("\r\nOK SEARCH completed", "").split(" ")
-// const messagePromises = []
-
-// ids.shift()
-
-// for (const id of ids) messagePromises.push(client.fetchMessage(id.trim()))
-
-// const messages = await Promise.all(messagePromises)
-
-// for (const message of messages) console.log(message)
-
-// const client = new POP3Client("pop.ionos.de", 995, true)
-
-// await client.login("<REDACTED>", "<REDACTED>")
-// await new Promise(resolve => setTimeout(resolve, 1000))
-
-// writeFile("mails/1.eml", (await client.retrieveMail("1")).split("\r\n").slice(1, -2).join("\r\n"))
-// await new Promise(resolve => setTimeout(resolve, 1000))
-// writeFile("mails/2.eml", (await client.retrieveMail("2")).split("\r\n").slice(1, -2).join("\r\n"))
-
-// const list = (await client.list()).split("\r\n").slice(1, -2) // Remove the first and last line
-// const mailIds = list.map(l => l.split(" ")[0])
-// const mailPromises = []
-// for (const id of mailIds) mailPromises.push(client.retrieveMail(id))
-// const mails = await Promise.all(mailPromises)
-// for (const mail of mails) writeFile(`mails/${mailIds[mails.indexOf(mail)]}.txt`, mail)
-
 const up = new POPUpstream({
-	host:     "<redacted>",
-	port:     995,
-	useTLS:   true,
-	username: "<redacted>",
-	password: "<redacted>"
+	host:     getConfig("upstream.pop3.host"),
+	port:     getConfig("upstream.pop3.port", 995),
+	useTLS:   getConfig("upstream.pop3.useTLS", true),
+	username: getConfig("upstream.pop3.username"),
+	password: getConfig("upstream.pop3.password")
 })
 
 setInterval(async () => {
 	await up.fetchNewEmails()
 }, 1000 * 60 * 5) // 5 minutes
 
-// const down = new SMTPClient("smtp.ionos.de", 25, false)
-
-// await new Promise(resolve => setTimeout(resolve, 1000))
-// await down.ehlo("127.0.0.1")
-// await down.startTLS()
-// await down.ehlo("127.0.0.1")
-// await down.login("<REDACTED>", "<REDACTED>")
-// await down.from("<REDACTED>")
-// await down.to("<REDACTED>")
-// await down.data(await readFile("mails/35baf742-6aab-4e39-899b-63330c40f6f9.eml", "utf-8"))
-// await down.quit()
-
 export const smtpupstream = new SMTPUpstream({
-	host:     "<redacted>",
-	port:     25,
-	useTLS:   false,
-	username: "<redacted>",
-	password: "<redacted>"
+	host:     getConfig("upstream.smtp.host"),
+	port:     getConfig("upstream.smtp.port", 25),
+	useTLS:   getConfig("upstream.smtp.useTLS", false),
+	username: getConfig("upstream.smtp.username"),
+	password: getConfig("upstream.smtp.password")
 })
