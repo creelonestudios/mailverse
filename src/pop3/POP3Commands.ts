@@ -4,6 +4,7 @@ import { Socket } from "net"
 import User from "../models/User.js"
 import getConfig from "../config.js"
 import { readFile } from "fs/promises"
+import { popupstream } from "../main.js"
 
 type POP3ConnectionState = {
 	username: string
@@ -64,6 +65,7 @@ const PASS = new POP3Command("PASS", "Set password and log in", false, async (so
 	if (valid) {
 		state.login = true
 		sock.write("+OK Logged in\r\n")
+		await popupstream.fetchNewEmails()
 	} else sock.write("-ERR Invalid username or password\r\n")
 })
 
