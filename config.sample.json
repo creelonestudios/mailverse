@@ -1,8 +1,28 @@
 {
   "host": "example.com",
-  "db_dialect": "mariadb",
-  "db_username": "root",
-  "db_password": "secret",
-  "db_database": "mailverse",
-  "smtp_header": "example.com SMTP"
+	"db": {
+		"dialect": "mariadb",
+		"database": "mailverse",
+		"username": "mailverse",
+		"password": "secret"
+	},
+	"smtp": {
+		"header": "example.com SMTP"
+	},
+	"upstream": {
+		"pop3": {
+			"host": "pop.myhost.com",
+			"port": 995,
+			"useTLS": true,
+			"username": "*@example.com",
+			"password": "secret"
+		},
+		"smtp": {
+			"host": "smtp.myhost.com",
+			"port": 25,
+			"useTLS": false,
+			"username": "*@example.com",
+			"password": "secret"
+		}
+	}
 }
