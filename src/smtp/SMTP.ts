@@ -12,8 +12,8 @@ export default class SMTP {
 		const id = crypto.randomUUID()
 
 		await mkdir(`mails/`, { recursive: true })
-		await writeFile(`mails/${id}.txt`, info.content)
-		logger.log(`Saved mail to mails/${id}.txt`)
+		await writeFile(`mails/${id}.eml`, info.content)
+		logger.log(`Saved mail to mails/${id}.eml`)
 
 		const serverName = getConfig("host")
 

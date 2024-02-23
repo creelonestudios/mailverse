@@ -101,7 +101,7 @@ const RETR = new POP3Command("RETR", "Retrieve message", true, async (sock: Sock
 
 	if (!mail) return void sock.write("-ERR No such message\r\n")
 
-	const content = await readFile(`mails/${mail.content}.txt`)
+	const content = await readFile(`mails/${mail.content}.eml`)
 
 	sock.write(`+OK\r\n${content}\r\n.\r\n`)
 })
