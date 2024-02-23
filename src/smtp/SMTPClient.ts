@@ -7,22 +7,105 @@ const logger = new Logger("SMTPClient", "TEAL")
 
 export default class SMTPClient {
 
-	static sendMessage(host: string, port: number, from: string, to: string, content: string, useTLS: boolean) {
-		// const sock = net.createConnection(port, host)
-		const sock = useTLS ? tls.connect(port, host) : net.createConnection(port, host)
+	socket: net.Socket
 
-		sock.on("data", (data: Buffer) => {
+	constructor(host: string, port: number, useTLS: boolean) {
+		this.socket = useTLS ? tls.connect(port, host) : net.createConnection(port, host)
+
+		this.socket.on("data", (data: Buffer) => {
 			logger.log(`Received data: ${data.toString()}`)
 		})
-		sock.on("connect", () => {
-			logger.log("Connected to server")
-			sock.write(`EHLO ${getConfig("host", "localhost")}\r\n`)
-			sock.write(`MAIL FROM:<${from}>\r\n`)
-			sock.write(`RCPT TO:<${to}>\r\n`)
-			sock.write("DATA\r\n")
-			sock.write(`${content}\r\n.\r\n`)
-			sock.write("QUIT\r\n")
+	}
+
+	writeAndWaitForResponse(data: string) {
+		logger.log(`Sending data: ${data}`)
+
+		return new Promise<string>(resolve => {
+			const { socket } = this
+
+			socket.once("data", (recv: Buffer) => {
+				const text = recv.toString()
+
+				logger.log(`Received data: ${text}`)
+
+				resolve(text)
+			})
+
+			socket.write(data)
 		})
 	}
+
+	async ehlo(host: string) {
+		const response = await this.writeAndWaitForResponse(`EHLO ${host}\r\n`)
+
+		return response
+	}
+
+	async from(from: string) {
+		const response = await this.writeAndWaitForResponse(`MAIL FROM:<${from}>\r\n`)
+
+		return response
+	}
+
+	async to(to: string) {
+		const response = await this.writeAndWaitForResponse(`RCPT TO:<${to}>\r\n`)
+
+		return response
+	}
+
+	async data(content: string) {
+		const response = await this.writeAndWaitForResponse("DATA\r\n")
+		const contentResponse = await this.writeAndWaitForResponse(`${content}\r\n.\r\n`)
+
+		return { response, contentResponse }
+	}
+
+	async quit() {
+		const response = await this.writeAndWaitForResponse("QUIT\r\n")
+
+		return response
+	}
+
+	async login(username: string, password: string) {
+		const resp = await this.writeAndWaitForResponse(`AUTH LOGIN\r\n`)
+		const userResp = await this.writeAndWaitForResponse(`${Buffer.from(username).toString("base64")}\r\n`)
+		const passResp = await this.writeAndWaitForResponse(`${Buffer.from(password).toString("base64")}\r\n`)
+
+		return { resp, userResp, passResp }
+	}
+
+	async startTLS() {
+		const response = await this.writeAndWaitForResponse("STARTTLS\r\n")
+
+		if (response.startsWith("220")) {
+			this.socket.removeAllListeners()
+			this.socket = tls.connect({ socket: this.socket })
+			this.socket.on("data", (data: Buffer) => {
+				logger.log(`Received TLS data: ${data.toString()}`)
+			})
+
+			return true
+		}
+
+		return false
+	}
+
+	// static sendMessage(host: string, port: number, from: string, to: string, content: string, useTLS: boolean) {
+	// 	// const sock = net.createConnection(port, host)
+	// 	const sock = useTLS ? tls.connect(port, host) : net.createConnection(port, host)
+
+	// 	sock.on("data", (data: Buffer) => {
+	// 		logger.log(`Received data: ${data.toString()}`)
+	// 	})
+	// 	sock.on("connect", () => {
+	// 		logger.log("Connected to server")
+	// 		sock.write(`EHLO ${getConfig("host", "localhost")}\r\n`)
+	// 		sock.write(`MAIL FROM:<${from}>\r\n`)
+	// 		sock.write(`RCPT TO:<${to}>\r\n`)
+	// 		sock.write("DATA\r\n")
+	// 		sock.write(`${content}\r\n.\r\n`)
+	// 		sock.write("QUIT\r\n")
+	// 	})
+	// }
 
 }

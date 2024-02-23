@@ -9,6 +9,7 @@ import getConfig from "./config.js"
 // import { writeFile } from "node:fs/promises"
 import POPUpstream from "./upstreams/POPUpstream.js"
 import { readFile } from "node:fs/promises"
+import SMTPClient from "./smtp/SMTPClient.js"
 // import IMAPClient from "./imap/IMAPClient.js"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -83,6 +84,18 @@ if (getConfig("pop3.enabled", true)) new POP3Server(getConfig("pop3.port", 110),
 // const mails = await Promise.all(mailPromises)
 // for (const mail of mails) writeFile(`mails/${mailIds[mails.indexOf(mail)]}.txt`, mail)
 
-const up = new POPUpstream({})
+// const up = new POPUpstream({})
 
-await up.fetchNewEmails()
+// await up.fetchNewEmails()
+
+const down = new SMTPClient("smtp.ionos.de", 25, false)
+
+await new Promise(resolve => setTimeout(resolve, 1000))
+await down.ehlo("127.0.0.1")
+await down.startTLS()
+await down.ehlo("127.0.0.1")
+await down.login("<REDACTED>", "<REDACTED>")
+await down.from("<REDACTED>")
+await down.to("<REDACTED>")
+await down.data(await readFile("mails/35baf742-6aab-4e39-899b-63330c40f6f9.eml", "utf-8"))
+await down.quit()
