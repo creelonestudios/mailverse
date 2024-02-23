@@ -1,5 +1,4 @@
 import Logger from "../Logger.js"
-import getConfig from "../config.js"
 import net from "net"
 import tls from "tls"
 
