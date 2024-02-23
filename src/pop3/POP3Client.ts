@@ -110,4 +110,12 @@ export default class POP3Client {
 		return resp
 	}
 
+	async logout() {
+		const resp = await this.writeAndWaitForResponse("QUIT\r\n")
+
+		logger.log(`QUIT: ${resp}`)
+
+		this.socket.end()
+	}
+
 }
