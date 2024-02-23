@@ -1,6 +1,6 @@
-import Logger from "../Logger.js";
-import POP3Client from "../pop3/POP3Client.js";
-import SMTP from "../smtp/SMTP.js";
+import Logger from "../Logger.js"
+import POP3Client from "../pop3/POP3Client.js"
+import SMTP from "../smtp/SMTP.js"
 
 type POPUpstreamOptions = {
 	host: string;

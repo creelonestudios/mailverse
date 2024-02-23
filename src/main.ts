@@ -10,6 +10,7 @@ import getConfig from "./config.js"
 import POPUpstream from "./upstreams/POPUpstream.js"
 import { readFile } from "node:fs/promises"
 import SMTPClient from "./smtp/SMTPClient.js"
+import SMTPUpstream from "./upstreams/SMTPUpstream.js"
 // import IMAPClient from "./imap/IMAPClient.js"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -84,18 +85,34 @@ if (getConfig("pop3.enabled", true)) new POP3Server(getConfig("pop3.port", 110),
 // const mails = await Promise.all(mailPromises)
 // for (const mail of mails) writeFile(`mails/${mailIds[mails.indexOf(mail)]}.txt`, mail)
 
-// const up = new POPUpstream({})
+const up = new POPUpstream({
+	host:     "<redacted>",
+	port:     995,
+	useTLS:   true,
+	username: "<redacted>",
+	password: "<redacted>"
+})
 
-// await up.fetchNewEmails()
+setInterval(async () => {
+	await up.fetchNewEmails()
+}, 1000 * 60 * 5) // 5 minutes
 
-const down = new SMTPClient("smtp.ionos.de", 25, false)
+// const down = new SMTPClient("smtp.ionos.de", 25, false)
 
-await new Promise(resolve => setTimeout(resolve, 1000))
-await down.ehlo("127.0.0.1")
-await down.startTLS()
-await down.ehlo("127.0.0.1")
-await down.login("<REDACTED>", "<REDACTED>")
-await down.from("<REDACTED>")
-await down.to("<REDACTED>")
-await down.data(await readFile("mails/35baf742-6aab-4e39-899b-63330c40f6f9.eml", "utf-8"))
-await down.quit()
+// await new Promise(resolve => setTimeout(resolve, 1000))
+// await down.ehlo("127.0.0.1")
+// await down.startTLS()
+// await down.ehlo("127.0.0.1")
+// await down.login("<REDACTED>", "<REDACTED>")
+// await down.from("<REDACTED>")
+// await down.to("<REDACTED>")
+// await down.data(await readFile("mails/35baf742-6aab-4e39-899b-63330c40f6f9.eml", "utf-8"))
+// await down.quit()
+
+export const smtpupstream = new SMTPUpstream({
+	host:     "<redacted>",
+	port:     25,
+	useTLS:   false,
+	username: "<redacted>",
+	password: "<redacted>"
+})
