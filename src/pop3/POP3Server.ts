@@ -43,7 +43,8 @@ export default class POP3Server {
 			logger.log(`Received data: ${msg}`)
 			const args = msg.split(" ").slice(1)
 
-			const command = commands.find(c => c.command == msg.substring(0, msg.indexOf(" ")))
+			const sentCmd = msg.includes(" ") ? msg.substring(0, msg.indexOf(" ")) : msg.trim()
+			const command = commands.find(c => c.command == sentCmd)
 
 			if (!command) {
 				sock.write("-ERR Unknown command\r\n")

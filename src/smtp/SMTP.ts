@@ -9,6 +9,7 @@ const logger = new Logger("SMTP", "GREEN")
 export default class SMTP {
 
 	static async handleNewMail(info: { from: string, to: string[], content: string }) {
+		logger.log(`Received mail from ${info.from} to ${info.to.join(", ")}`)
 		const id = crypto.randomUUID()
 
 		await mkdir(`mails/`, { recursive: true })

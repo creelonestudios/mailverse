@@ -99,7 +99,10 @@ export default class POP3Client {
 
 		logger.log(`LIST: ${resp}`)
 
-		return resp
+		const list = resp.split("\r\n").slice(1, -2) // Remove the first and last line
+		const mailIds = list.map(l => l.split(" ")[0])
+
+		return mailIds
 	}
 
 	async retrieveMail(id: string) {
@@ -107,7 +110,15 @@ export default class POP3Client {
 
 		logger.log(`RETR: ${resp}`)
 
-		return resp
+		const content = resp.split("\r\n").slice(1, -2).join("\r\n")
+
+		return content
+	}
+
+	async deleteMail(id: string) {
+		const resp = await this.writeAndWaitForResponse(`DELE ${id}\r\n`)
+
+		logger.log(`DELE: ${resp}`)
 	}
 
 	async logout() {
