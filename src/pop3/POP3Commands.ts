@@ -3,8 +3,8 @@ import Mail from "../models/Mail.js"
 import { Socket } from "net"
 import User from "../models/User.js"
 import getConfig from "../config.js"
-import { readFile } from "fs/promises"
 import { popupstream } from "../main.js"
+import { readFile } from "fs/promises"
 
 type POP3ConnectionState = {
 	username: string
