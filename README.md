@@ -1,7 +1,7 @@
 ![mailverse](logo.png)
 # Mailverse
 
-Mailverse is a new and modern email server written in NodeJS. It is designed to be fast, secure and easy to use.
+Mailverse is a new and modern email server written in TypeScript. It is designed to be fast, secure and easy to use.
 
 ## Features
 
