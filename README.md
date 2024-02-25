@@ -5,10 +5,9 @@ Mailverse is a new and modern email server written in NodeJS. It is designed to 
 
 ## Features
 
-- **SMTP** server with TLS support
-- **POP3** server with TLS support
-- 🔜 **IMAP** server with TLS support
-- 🆕 **Upstreams**: use an existing SMTP/POP server as relay and store your mail on own hardware. Unique to Mailverse
+- **[SMTP]** **[POP3]** **[🔜IMAP]** server with TLS support
+- 🆕 **Upstreams**: use an existing SMTP / POP server as relay and store your mail on own hardware.
+Unique to Mailverse
 - 🔜 **Web Interface** for managing your instance
 - 🔜 **Webmailer** with modern UI
 - **MariaDB / MySQL / File System** support for storing mail
