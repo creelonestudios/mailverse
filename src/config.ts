@@ -6,7 +6,7 @@ const config: Json = existsSync("config.json") ? JSON.parse(await readFile("conf
 
 const logger = new Logger("config", "PINK")
 
-type ConfigValue = string | number | boolean
+type ConfigValue = string | number | boolean | Json | Array<Json>
 type Json = { [P in string]: Json | ConfigValue | null }
 
 export default function getConfig<T extends ConfigValue>(key: string, defaultValue?: T): T {
@@ -21,7 +21,7 @@ export default function getConfig<T extends ConfigValue>(key: string, defaultVal
 		error = e as string
 	}
 
-	value = value ?? getEnvVar(key) ?? defaultValue
+	value ??= getEnvVar(key) ?? defaultValue
 
 	// console.log("config:", key, value)
 	if (value != undefined) {
@@ -78,11 +78,12 @@ function searchJsonKey(key: string): ConfigValue | undefined {
 	}
 
 	if (isValid(value)) return value
-	if (typeof value == "object") logger.warn(`Invalid config value (${key}):`, value instanceof Array ? "[...]" : "{...}")
+
+	logger.warn(`Invalid config value (${key}):`, value instanceof Array ? "[...]" : "{...}")
 
 	return undefined
 }
 
 function isValid(value: unknown): value is ConfigValue {
-	return ["string", "number", "boolean"].includes(typeof value)
+	return value != null
 }

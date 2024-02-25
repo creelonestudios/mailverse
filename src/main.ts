@@ -45,22 +45,9 @@ secure: if (getConfig("pop3s.enabled", false) || getConfig("smtps.enabled", fals
 if (getConfig("smtp.enabled", true)) new SMTPServer(getConfig("smtp.port", 25), false) // Port 25 for regular SMTP, 465 for SMTPS
 if (getConfig("pop3.enabled", true)) new POP3Server(getConfig("pop3.port", 110), false) // Port 110 for regular POP3, 995 for POP3S
 
-export const popupstream = new POPUpstream({
-	host:     getConfig("upstream.pop3.host"),
-	port:     getConfig("upstream.pop3.port", 995),
-	useTLS:   getConfig("upstream.pop3.useTLS", true),
-	username: getConfig("upstream.pop3.username"),
-	password: getConfig("upstream.pop3.password")
-})
+export const popupstream  = new POPUpstream(getConfig("upstream.pop3"))
+export const smtpupstream = new SMTPUpstream(getConfig("upstream.smtp"))
 
 setInterval(async () => {
 	await popupstream.fetchNewEmails()
 }, 1000 * 60 * 5) // 5 minutes
-
-export const smtpupstream = new SMTPUpstream({
-	host:     getConfig("upstream.smtp.host"),
-	port:     getConfig("upstream.smtp.port", 25),
-	useTLS:   getConfig("upstream.smtp.useTLS", false),
-	username: getConfig("upstream.smtp.username"),
-	password: getConfig("upstream.smtp.password")
-})
