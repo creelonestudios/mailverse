@@ -44,7 +44,7 @@ services:
 1. Install the latest version of NodeJS
 2. Clone the repository
 3. Run `npm install`
-4. Run `npx tsc`
+4. Run `npm run build` (or `tsc`)
 5. Set up a MariaDB / MySQL database and create a user with access to it
 6. Create a `config.json` file (see below)
 7. Run `node .` (may require root permissions) or with a process manager like `pm2`
