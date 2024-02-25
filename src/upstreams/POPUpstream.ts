@@ -43,13 +43,10 @@ export default class POPUpstream {
 
 		// Fetch the mail inside the <> brackets in the From: header
 		let fromAddress = content.match(/^From: (.+?)\r\n/m)?.[1]
+		let toAddress   = content.match(/^To: (.+?)\r\n/m)?.[1]
 
 		fromAddress = fromAddress?.match(/<(.+?)>/)?.[1] || fromAddress
-
-		let toAddress = content.match(/^To: (.+?)\r\n/m)?.[1]
-
-		toAddress = toAddress?.match(/<(.+?)>/)?.[1] || toAddress
-
+		toAddress   = toAddress?.match(/<(.+?)>/)?.[1]   || toAddress
 		if (!fromAddress || !toAddress) throw new Error("Invalid email")
 
 		await this.popclient.deleteMail(mailIds[0])
