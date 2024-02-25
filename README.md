@@ -47,7 +47,7 @@ services:
 4. Run `npx tsc`
 5. Set up a MariaDB / MySQL database and create a user with access to it
 6. Create a `config.json` file (see below)
-7. Run `node dist/main.js` (may require root permissions) or with a process manager like `pm2`
+7. Run `node .` (may require root permissions) or with a process manager like `pm2`
 
 ## Config
 
