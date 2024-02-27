@@ -52,3 +52,5 @@ services:
 ## Config
 
 Copy the example config from `config.sample.json` to `config.json` and adjust it to your needs.
+
+In case of using Docker: you should only change the ports in the config if you are using host networking. If not, change the ports in the port mapping instead.
