@@ -1,7 +1,7 @@
 import { Dialect } from "sequelize"
 import Mail from "./models/Mail.js"
 import POP3Server from "./pop3/POP3Server.js"
-import POPUpstream from "./upstreams/POPUpstream.js"
+import POP3Upstream from "./upstreams/POP3Upstream.js"
 import SMTPServer from "./smtp/SMTPServer.js"
 import SMTPUpstream from "./upstreams/SMTPUpstream.js"
 import { Sequelize } from "sequelize-typescript"
@@ -45,7 +45,7 @@ secure: if (getConfig("pop3s.enabled", false) || getConfig("smtps.enabled", fals
 if (getConfig("smtp.enabled", true)) new SMTPServer(getConfig("smtp.port", 25), false) // Port 25 for regular SMTP, 465 for SMTPS
 if (getConfig("pop3.enabled", true)) new POP3Server(getConfig("pop3.port", 110), false) // Port 110 for regular POP3, 995 for POP3S
 
-export const popupstream  = new POPUpstream(getConfig("upstream.pop3"))
+export const popupstream  = new POP3Upstream(getConfig("upstream.pop3"))
 export const smtpupstream = new SMTPUpstream(getConfig("upstream.smtp"))
 
 setInterval(async () => {
