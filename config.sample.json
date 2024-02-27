@@ -7,7 +7,17 @@
 		"password": "secret"
 	},
 	"smtp": {
-		"header": "example.com SMTP"
+		"header": "example.com SMTP",
+		"enabled": false
+	},
+	"pop3": {
+		"enabled": false
+	},
+	"smtps": {
+		"enabled": false
+	},
+	"pop3s": {
+		"enabled": false
 	},
 	"upstream": {
 		"pop3": {
