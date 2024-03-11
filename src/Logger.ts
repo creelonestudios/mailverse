@@ -1,3 +1,7 @@
+import getConfig from "./config.js"
+
+const debug = getConfig<boolean>("debug", false)
+
 const ESC = "\u001b"
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -17,7 +21,7 @@ const COLOR = { GRAY, DARK, RED, GREEN, YELLOW, PINK, TEAL, WHITE }
 export default class Logger {
 
 	constructor(private readonly actor: string, private readonly color: keyof typeof COLOR) {
-		if (!global.debug) this.debug = () => {} // only enable debug logs when debugging is on
+		if (debug) this.debug = () => {} // only enable debug logs when debugging is on
 	}
 
 	log(...message: string[]) {

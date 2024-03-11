@@ -7,9 +7,6 @@ import User from "./models/User.js"
 import getConfig from "./config.js"
 import { readFile } from "node:fs/promises"
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-global.debug = getConfig("debug", false) as any
-
 export const sql = new Sequelize({
 	database: getConfig<string>("db.database"),
 	dialect:  getConfig<Dialect>("db.dialect"),
