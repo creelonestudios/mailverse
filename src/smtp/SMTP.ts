@@ -28,6 +28,8 @@ export default class SMTP {
 				// logger.error("Forwarding mails to other servers is not implemented yet.")
 
 				info.to.forEach(async mail => {
+					if (mail.endsWith(`@${serverName}`)) return
+
 					await smtpupstream.sendMail(info.from, mail, info.content)
 				})
 
