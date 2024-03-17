@@ -28,15 +28,33 @@ export default class POP3Upstream {
 
 			if (!welcomeMessage.startsWith("+OK")) throw new Error(`Error from POP3 server: ${welcomeMessage}`)
 
-			await this.popclient.login(this.options.username, this.options.password)
+			if (!(await this.popclient.login(this.options.username, this.options.password))) {
+				this.popclient.socket.end()
+				this.popclient = null
+
+				throw new Error("Invalid username or password")
+			}
 		}
 
 		const mailIds = await this.popclient.list()
 
+		if (!mailIds) {
+			this.popclient.socket.end()
+			this.popclient = null
+
+			throw new Error("Error while listing mails")
+		}
 		if (mailIds.length === 0) return
 		if (mailIds.length > 1) setTimeout(() => this.fetchNewEmails(), 1000)
 
 		const content = await this.popclient.retrieveMail(mailIds[0])
+
+		if (!content) {
+			this.popclient.socket.end()
+			this.popclient = null
+
+			throw new Error("Error while retrieving mail")
+		}
 
 		// Fetch the mail inside the <> brackets in the From: header
 		let fromAddress = content.match(/^From: (.+?)\r\n/m)?.[1]
