@@ -3,17 +3,19 @@ import Logger from "../Logger.js"
 import User from "../models/User.js"
 import crypto from "node:crypto"
 import getConfig from "../config.js"
+import { smtpupstream } from "../main.js"
 
 const logger = new Logger("SMTP", "GREEN")
 
 export default class SMTP {
 
 	static async handleNewMail(info: { from: string, to: string[], content: string }) {
+		logger.log(`Received mail from ${info.from} to ${info.to.join(", ")}`)
 		const id = crypto.randomUUID()
 
 		await mkdir(`mails/`, { recursive: true })
-		await writeFile(`mails/${id}.txt`, info.content)
-		logger.log(`Saved mail to mails/${id}.txt`)
+		await writeFile(`mails/${id}.eml`, info.content)
+		logger.log(`Saved mail to mails/${id}.eml`)
 
 		const serverName = getConfig("host")
 
@@ -22,10 +24,15 @@ export default class SMTP {
 
 			if (!info.to.every(email => email.endsWith(`@${serverName}`))) { // if not all recipients are on this server
 				logger.log("Not all recipients are on this server. Will forward mail to other servers.")
-				logger.error("Forwarding mails to other servers is not implemented yet.")
 
+				// logger.error("Forwarding mails to other servers is not implemented yet.")
 
-				// TODO: forward mail to other servers using SMTPClient
+				info.to.forEach(async mail => {
+					if (mail.endsWith(`@${serverName}`)) return
+
+					await smtpupstream.sendMail(info.from, mail, info.content)
+				})
+
 				return
 			}
 

@@ -89,6 +89,16 @@ export default class SMTPServer {
 				const email = msg.split(":")[1].split(">")[0].replace("<", "")
 				const [username, domain] = email.split("@")
 
+				if (info.from.endsWith(`@${getConfig("host")}`)) {
+					// This is an outgoing mail, we need to forward it to another server
+					logger.log("Mail is outgoing.")
+					info.to.push(email)
+					logger.log(`RCPT TO: ${email}`)
+					status(250)
+
+					return
+				}
+
 				if (domain != getConfig("host")) {
 					// The spec says we MAY forward the message ourselves,
 					// but simply returning 550 is fine, and the client should handle it

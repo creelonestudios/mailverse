@@ -3,6 +3,7 @@ import Mail from "../models/Mail.js"
 import { Socket } from "net"
 import User from "../models/User.js"
 import getConfig from "../config.js"
+import { popupstream } from "../main.js"
 import { readFile } from "fs/promises"
 
 type POP3ConnectionState = {
@@ -64,6 +65,7 @@ const PASS = new POP3Command("PASS", "Set password and log in", false, async (so
 	if (valid) {
 		state.login = true
 		sock.write("+OK Logged in\r\n")
+		await popupstream.fetchNewEmails()
 	} else sock.write("-ERR Invalid username or password\r\n")
 })
 
@@ -101,7 +103,7 @@ const RETR = new POP3Command("RETR", "Retrieve message", true, async (sock: Sock
 
 	if (!mail) return void sock.write("-ERR No such message\r\n")
 
-	const content = await readFile(`mails/${mail.content}.txt`)
+	const content = await readFile(`mails/${mail.content}.eml`)
 
 	sock.write(`+OK\r\n${content}\r\n.\r\n`)
 })
