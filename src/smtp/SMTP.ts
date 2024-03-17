@@ -4,6 +4,7 @@ import User from "../models/User.js"
 import crypto from "node:crypto"
 import getConfig from "../config.js"
 import { smtpupstream } from "../main.js"
+import SMTPClient from "./SMTPClient.js"
 
 const logger = new Logger("SMTP", "GREEN")
 
@@ -56,11 +57,22 @@ export default class SMTP {
 				return
 			}
 
-			await user.$create("mail", {
-				from:    info.from,
-				to:      rec,
-				content: id
-			})
+			// await user.$create("mail", {
+			// 	from:    info.from,
+			// 	to:      rec,
+			// 	content: id
+			// })
+			const lmtp = new SMTPClient(getConfig("lmtp.host", "localhost"), getConfig("lmtp.port", 24), false)
+
+			const header = await lmtp.read()
+
+			if (!header.startsWith("220")) throw new Error(`Error from LMTP server: ${header}`)
+
+			await lmtp.lhlo(getConfig("host"))
+			await lmtp.from(info.from)
+			await lmtp.to(rec)
+			await lmtp.data(info.content)
+			await lmtp.quit()
 
 			logger.log(`Forwarded mail to ${rec}`)
 		})

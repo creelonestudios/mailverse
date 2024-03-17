@@ -1,0 +1,12 @@
+version: "3"
+services:
+  dovecot:
+    image: dovecot/dovecot
+    volumes:
+      - ./dcot/dovecot:/etc/dovecot
+      - ./dcot/mail:/var/mail
+    ports:
+      - "143:143"
+      - "993:993"
+      - "2424:24"
+    

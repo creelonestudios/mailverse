@@ -58,6 +58,18 @@ export default class SMTPClient {
 		return true
 	}
 
+	async lhlo(host: string) {
+		const response = await this.writeAndWaitForResponse(`LHLO ${host}\r\n`)
+
+		if (!response.startsWith("250")) {
+			this.socket.end()
+
+			throw new Error(`Error from LMTP server: ${response}`)
+		}
+
+		return true
+	}
+
 	async from(from: string) {
 		const response = await this.writeAndWaitForResponse(`MAIL FROM:<${from}>\r\n`)
 
