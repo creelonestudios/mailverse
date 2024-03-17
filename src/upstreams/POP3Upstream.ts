@@ -2,7 +2,7 @@ import Logger from "../Logger.js"
 import POP3Client from "../pop3/POP3Client.js"
 import SMTP from "../smtp/SMTP.js"
 
-type POPUpstreamOptions = {
+type POP3UpstreamOptions = {
 	host: string;
 	port: number;
 	useTLS: boolean;
@@ -18,11 +18,11 @@ function sleep(ms: number) {
 
 const logger = new Logger("POP Upstream", "TEAL")
 
-export default class POPUpstream {
+export default class POP3Upstream {
 
-	popclient: POP3Client | null; options: POPUpstreamOptions
+	popclient: POP3Client | null; options: POP3UpstreamOptions
 
-	constructor(options: POPUpstreamOptions) {
+	constructor(options: POP3UpstreamOptions) {
 		this.options = options
 		this.popclient = null
 	}
