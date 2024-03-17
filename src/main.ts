@@ -51,3 +51,4 @@ export const smtpupstream = new SMTPUpstream(getConfig("upstream.smtp"))
 setInterval(async () => {
 	await popupstream.fetchNewEmails()
 }, 1000 * 60 * 5) // 5 minutes
+await popupstream.fetchNewEmails()

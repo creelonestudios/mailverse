@@ -34,6 +34,18 @@ export default class SMTPClient {
 		})
 	}
 
+	read() {
+		return new Promise<string>(resolve => {
+			this.socket.once("data", (recv: Buffer) => {
+				const text = recv.toString()
+
+				logger.log(`Received data: ${text}`)
+
+				resolve(text)
+			})
+		})
+	}
+
 	async ehlo(host: string) {
 		const response = await this.writeAndWaitForResponse(`EHLO ${host}\r\n`)
 

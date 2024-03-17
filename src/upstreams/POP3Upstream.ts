@@ -30,7 +30,7 @@ export default class POP3Upstream {
 	async fetchNewEmails() {
 		if (this.popclient === null) {
 			this.popclient = new POP3Client(this.options.host, this.options.port, this.options.useTLS)
-			await sleep(300)
+			logger.log(`POP welcome message: ${await this.popclient.read()}`)
 			await this.popclient.login(this.options.username, this.options.password)
 		}
 
