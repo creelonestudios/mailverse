@@ -22,8 +22,10 @@ export default class SMTPUpstream {
 	async sendMail(from: string, to: string, content: string) {
 		const smtpclient = new SMTPClient(this.options.host, this.options.port, this.options.useTLS)
 
-		// await sleep(300)
-		logger.log(`SMTP header: ${await smtpclient.read()}`)
+		const header = await smtpclient.read()
+
+		if (!header.startsWith("220")) throw new Error(`Error from SMTP server: ${header}`)
+
 		await smtpclient.ehlo("127.0.0.1")
 		if (!this.options.useTLS) {
 			await smtpclient.startTLS()

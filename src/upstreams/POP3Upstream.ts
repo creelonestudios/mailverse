@@ -24,7 +24,10 @@ export default class POP3Upstream {
 	async fetchNewEmails() {
 		if (this.popclient === null) {
 			this.popclient = new POP3Client(this.options.host, this.options.port, this.options.useTLS)
-			logger.log(`POP welcome message: ${await this.popclient.read()}`)
+			const welcomeMessage = await this.popclient.read()
+
+			if (!welcomeMessage.startsWith("+OK")) throw new Error(`Error from POP3 server: ${welcomeMessage}`)
+
 			await this.popclient.login(this.options.username, this.options.password)
 		}
 
