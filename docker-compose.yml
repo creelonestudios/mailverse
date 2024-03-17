@@ -4,7 +4,7 @@ services:
     image: dovecot/dovecot
     volumes:
       - ./dcot/dovecot:/etc/dovecot
-      - ./dcot/mail:/var/mail
+      - ./dcot/mail:/srv/mail
     ports:
       - "143:143"
       - "993:993"
