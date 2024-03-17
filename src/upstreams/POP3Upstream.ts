@@ -10,12 +10,6 @@ type POP3UpstreamOptions = {
 	password: string;
 }
 
-function sleep(ms: number) {
-	return new Promise(resolve => {
-		setTimeout(resolve, ms)
-	})
-}
-
 const logger = new Logger("POP Upstream", "TEAL")
 
 export default class POP3Upstream {

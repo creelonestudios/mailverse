@@ -9,12 +9,6 @@ type SMTPUpstreamOptions = {
 	password: string
 }
 
-function sleep(ms: number) {
-	return new Promise(resolve => {
-		setTimeout(resolve, ms)
-	})
-}
-
 const logger = new Logger("SMTP Upstream", "PINK")
 
 export default class SMTPUpstream {
