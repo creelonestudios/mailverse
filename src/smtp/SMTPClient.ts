@@ -49,56 +49,109 @@ export default class SMTPClient {
 	async ehlo(host: string) {
 		const response = await this.writeAndWaitForResponse(`EHLO ${host}\r\n`)
 
-		return response
+		if (!response.startsWith("250")) {
+			this.socket.end()
+
+			throw new Error(`Error from SMTP server: ${response}`)
+		}
+
+		return true
 	}
 
 	async from(from: string) {
 		const response = await this.writeAndWaitForResponse(`MAIL FROM:<${from}>\r\n`)
 
-		return response
+		if (!response.startsWith("250")) {
+			this.socket.end()
+
+			throw new Error(`Error from SMTP server: ${response}`)
+		}
+
+		return true
 	}
 
 	async to(to: string) {
 		const response = await this.writeAndWaitForResponse(`RCPT TO:<${to}>\r\n`)
 
-		return response
+		if (!response.startsWith("250")) {
+			this.socket.end()
+
+			throw new Error(`Error from SMTP server: ${response}`)
+		}
+
+		return true
 	}
 
 	async data(content: string) {
 		const response = await this.writeAndWaitForResponse("DATA\r\n")
+
+		if (!response.startsWith("354")) {
+			this.socket.end()
+
+			throw new Error(`Error from SMTP server: ${response}`)
+		}
+
 		const contentResponse = await this.writeAndWaitForResponse(`${content}\r\n.\r\n`)
 
-		return { response, contentResponse }
+		if (!contentResponse.startsWith("250")) {
+			this.socket.end()
+
+			throw new Error(`Error from SMTP server: ${contentResponse}`)
+		}
+
+		return true
 	}
 
 	async quit() {
-		const response = await this.writeAndWaitForResponse("QUIT\r\n")
+		await this.writeAndWaitForResponse("QUIT\r\n")
 
-		return response
+		return true
 	}
 
 	async login(username: string, password: string) {
 		const resp = await this.writeAndWaitForResponse(`AUTH LOGIN\r\n`)
+
+		if (!resp.startsWith("334")) {
+			this.socket.end()
+
+			throw new Error(`Error from SMTP server: ${resp}`)
+		}
+
 		const userResp = await this.writeAndWaitForResponse(`${Buffer.from(username).toString("base64")}\r\n`)
+
+		if (!userResp.startsWith("334")) {
+			this.socket.end()
+
+			throw new Error(`Error from SMTP server: ${userResp}`)
+		}
+
 		const passResp = await this.writeAndWaitForResponse(`${Buffer.from(password).toString("base64")}\r\n`)
 
-		return { resp, userResp, passResp }
+		if (!passResp.startsWith("235")) {
+			this.socket.end()
+
+			throw new Error(`Error from SMTP server: ${passResp}`)
+		}
+
+		return true
 	}
 
 	async startTLS() {
 		const response = await this.writeAndWaitForResponse("STARTTLS\r\n")
 
-		if (response.startsWith("220")) {
-			this.socket.removeAllListeners()
-			this.socket = tls.connect({ socket: this.socket })
-			this.socket.on("data", (data: Buffer) => {
-				logger.log(`Received TLS data: ${data.toString()}`)
-			})
+		if (!response.startsWith("220")) {
+			this.socket.end()
 
-			return true
+			throw new Error(`Error from SMTP server: ${response}`)
 		}
 
-		return false
+		this.socket.removeAllListeners()
+		this.socket = tls.connect({ socket: this.socket })
+		this.socket.on("data", (data: Buffer) => {
+			logger.log(`Received TLS data: ${data.toString()}`)
+		})
+
+		return true
 	}
 
 	// static sendMessage(host: string, port: number, from: string, to: string, content: string, useTLS: boolean) {

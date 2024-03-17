@@ -37,9 +37,9 @@ export default class SMTPUpstream {
 		await smtpclient.from(from)
 		await smtpclient.to(to)
 
-		const { response, contentResponse } = await smtpclient.data(content)
+		await smtpclient.data(content)
 
-		logger.log(`Sent mail to ${to}. Response: ${response}. Content response: ${contentResponse}`)
+		logger.log(`Sent mail to ${to}.`)
 
 		await smtpclient.quit()
 	}
