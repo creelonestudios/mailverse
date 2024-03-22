@@ -44,7 +44,12 @@ export default class POP3Upstream {
 
 			throw new Error("Error while listing mails")
 		}
-		if (mailIds.length === 0) return
+		if (mailIds.length === 0) {
+			await this.popclient.logout()
+			this.popclient = null
+
+			return
+		}
 		if (mailIds.length > 1) setTimeout(() => this.fetchNewEmails(), 1000)
 
 		const content = await this.popclient.retrieveMail(mailIds[0])
@@ -74,7 +79,10 @@ export default class POP3Upstream {
 
 		SMTP.handleNewMail({ from: fromAddress, to: [toAddress], content })
 
-		if (mailIds.length == 1) await this.popclient.logout()
+		if (mailIds.length == 1) {
+			await this.popclient.logout()
+			this.popclient = null
+		}
 	}
 
 }

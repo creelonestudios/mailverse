@@ -32,7 +32,7 @@ export default class POP3Client {
 				if (untilDot) {
 					info += text
 
-					if (text.endsWith("\r\n.\r\n")) {
+					if (text.endsWith("\r\n.\r\n") || text == "." || text == ".\r\n") {
 						resolve(info)
 						socket.off("data", handler)
 

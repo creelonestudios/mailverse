@@ -13,6 +13,7 @@ import { readFile } from "node:fs/promises"
 global.debug = getConfig("debug", false) as any
 
 export const sql = new Sequelize({
+	host:     getConfig<string>("db.host", "localhost"),
 	database: getConfig<string>("db.database"),
 	dialect:  getConfig<Dialect>("db.dialect"),
 	username: getConfig<string>("db.username"),
