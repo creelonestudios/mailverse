@@ -61,6 +61,7 @@ const STATUS_CODES: Record<number, StatusCode> = {
 	504: { code: 504, ok: false, message: "Command parameter is not implemented" },
 	521: { code: 521, ok: false, message: "Server does not accept mail" },
 	523: { code: 523, ok: false, message: "Encryption Needed" },
+	535: { code: 535, ok: false, message: "Authentication credentials invalid" },
 	550: { code: 550, ok: false, message: "Requested action not taken: mailbox unavailable" },
 	551: { code: 551, ok: false, message: "User not local; please try %" },
 	552: { code: 552, ok: false, message: "Requested mail action aborted: exceeded storage allocation" },
@@ -86,7 +87,7 @@ const ENHANCED_STATUS_CODES: Record<`${number} ${EnhancedCode}`, EnhancedStatusC
 	"554 5.3.4":  { code: 554, ok: false, message: "Message too big for system",               class: 5, subject: 7, detail: 8 }
 }
 
-type StatusOptions = {
+export type StatusOptions = {
 	message?: string,
 	enhancedCode?: EnhancedCode,
 	args?: string[]

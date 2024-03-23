@@ -1,10 +1,11 @@
+import sendStatus, { StatusOptions } from "./status.js"
 import Logger from "../Logger.js"
 import SMTP from "./SMTP.js"
 import User from "../models/User.js"
 import getConfig from "../config.js"
 import net from "net"
-import sendStatus from "./status.js"
 import tls from "tls"
+import { verify } from "argon2"
 
 const logger = new Logger("SMTPServer", "GREEN")
 
@@ -39,6 +40,15 @@ export default class SMTPServer {
 			content: ""
 		}
 
+		// State:
+		// 0: No authentication
+		// 1: Waiting for authentication (AUTH PLAIN)
+		// 2: Authenticated
+		const auth = {
+			state: 0,
+			user:  ""
+		}
+
 		sock.on("data", async (data: Buffer) => {
 			const msg = data.toString()
 
@@ -63,8 +73,7 @@ export default class SMTPServer {
 			logger.log(`Received data: ${msg}`)
 			if (msg.startsWith("EHLO")) {
 				sock.write(`250-${getConfig("host", "localhost")}\r\n`)
-
-				// We dont have any smtp extensions yet
+				sock.write(`250-AUTH PLAIN\r\n`)
 				status(250, { message: "HELP" }) // was: 250 HELP
 			} else if (msg.startsWith("MAIL FROM:")) {
 				// The spec says we should reset the state if the client sends MAIL FROM again
@@ -138,11 +147,59 @@ export default class SMTPServer {
 				// but that can be a security risk + it is also done with RCPT TO anyway
 				status(502)
 			} else if (msg.startsWith("EXPN")) status(502)
+			else if (msg.startsWith("AUTH PLAIN") || auth.state == 1) await SMTPServer.authPlain(msg, auth, info, status)
 			 else status(502)
 		})
 		sock.on("close", () => {
 			logger.log("Client disconnected")
 		})
+	}
+
+	static async authPlain(msg: string, auth: { state: number, user: string }, info: { from: string, to: string[], content: string },
+		status: (code: number, options?: StatusOptions | `${bigint}.${bigint}.${bigint}` | undefined) => void) {
+		if (auth.state == 2 || info.from != "" || info.to.length != 0 || info.content != "") {
+			// RFC 4954 Section 4:
+			// After a successful AUTH command completes, a server MUST reject any
+			// further AUTH commands with a 503 reply.
+			// RFC 4954 Section 4:
+			// The AUTH command is not permitted during a mail transaction.
+			// An AUTH command issued during a mail transaction MUST be rejected with a 503 reply.
+			status(503)
+		}
+
+		if (auth.state == 0) {
+			status(334)
+			auth.state = 1
+		} else if (auth.state == 1) {
+			const [_, username, password] = Buffer.from(msg, "base64").toString().split("\0")
+
+			if (!username || !password) {
+				status(501, "5.5.2")
+				auth.state = 0
+
+				return
+			}
+
+			const user = await User.findOne({ where: { username } })
+
+			if (!user) {
+				status(535)
+				auth.state = 0
+
+				return
+			}
+
+			if (!(await verify(user.password, password))) {
+				status(535)
+				auth.state = 0
+
+				return
+			}
+
+			auth.state = 2
+			auth.user = username
+			status(235, "2.7.0")
+		}
 	}
 
 }
