@@ -180,38 +180,47 @@ export default class SMTPServer {
 		}
 
 		if (auth.state == 0) {
+			if (msg.split(" ").length == 3) {
+				await SMTPServer.authenticateUser(msg.split(" ")[2], auth, status)
+
+				return
+			}
+
 			status(334)
 			auth.state = 1
-		} else if (auth.state == 1) {
-			const [_, username, password] = Buffer.from(msg, "base64").toString().split("\0")
+		} else if (auth.state == 1) await SMTPServer.authenticateUser(msg, auth, status)
+	}
 
-			if (!username || !password) {
-				status(501, "5.5.2")
-				auth.state = 0
+	static async authenticateUser(msg: string, auth: { state: number, user: string },
+		status: (code: number, options?: StatusOptions | `${bigint}.${bigint}.${bigint}` | undefined) => void) {
+		const [_, username, password] = Buffer.from(msg, "base64").toString().split("\0")
 
-				return
-			}
+		if (!username || !password) {
+			status(501, "5.5.2")
+			auth.state = 0
 
-			const user = await User.findOne({ where: { username } })
-
-			if (!user) {
-				status(535)
-				auth.state = 0
-
-				return
-			}
-
-			if (!(await verify(user.password, password))) {
-				status(535)
-				auth.state = 0
-
-				return
-			}
-
-			auth.state = 2
-			auth.user = `${username}@${getConfig("host")}`
-			status(235, "2.7.0")
+			return
 		}
+
+		const user = await User.findOne({ where: { username } })
+
+		if (!user) {
+			status(535)
+			auth.state = 0
+
+			return
+		}
+
+		if (!(await verify(user.password, password))) {
+			status(535)
+			auth.state = 0
+
+			return
+		}
+
+		auth.state = 2
+		auth.user = `${username}@${getConfig("host")}`
+		status(235, "2.7.0")
 	}
 
 }
