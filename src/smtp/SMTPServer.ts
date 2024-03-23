@@ -84,6 +84,18 @@ export default class SMTPServer {
 				}
 				const email = msg.split(":")[1].split(">")[0].replace("<", "")
 
+				if (email.endsWith(`@${getConfig("host")}`) && auth.user != email) {
+					// RFC 4954 Section 6:
+					// 530 5.7.0  Authentication required
+					// This response SHOULD be returned by any command other than AUTH, EHLO, HELO,
+					// NOOP, RSET, or QUIT when server policy requires
+					// authentication in order to perform the requested action and
+					// authentication is not currently in force.
+					status(530, "5.7.0")
+
+					return
+				}
+
 				logger.log(`MAIL FROM: ${email}`)
 				info.from = email
 				status(250)
@@ -197,7 +209,7 @@ export default class SMTPServer {
 			}
 
 			auth.state = 2
-			auth.user = username
+			auth.user = `${username}@${getConfig("host")}`
 			status(235, "2.7.0")
 		}
 	}
