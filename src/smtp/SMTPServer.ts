@@ -81,7 +81,8 @@ export default class SMTPServer {
 					to:      [],
 					content: ""
 				}
-				const email = msg.split(":")[1].split(">")[0].replace("<", "")
+
+				const email = msg.substring(msg.indexOf("<") + 1, msg.lastIndexOf(">"))
 
 				if (email.endsWith(`@${getConfig("host")}`) && auth.user != email) {
 					// RFC 4954 Section 6:
