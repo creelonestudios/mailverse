@@ -167,8 +167,10 @@ export default class SMTPServer {
 		})
 	}
 
-	static async authPlain(msg: string, auth: { state: number, user: string }, info: { from: string, to: string[], content: string },
-		status: (code: number, options?: StatusOptions | `${bigint}.${bigint}.${bigint}` | undefined) => void) {
+	static async authPlain(
+		msg: string, auth: { state: number, user: string }, info: { from: string, to: string[], content: string },
+		status: (code: number, options?: StatusOptions | `${bigint}.${bigint}.${bigint}` | undefined) => void
+	) {
 		if (auth.state == 2 || info.from != "" || info.to.length != 0 || info.content != "") {
 			// RFC 4954 Section 4:
 			// After a successful AUTH command completes, a server MUST reject any
@@ -191,8 +193,10 @@ export default class SMTPServer {
 		} else if (auth.state == 1) await SMTPServer.authenticateUser(msg, auth, status)
 	}
 
-	static async authenticateUser(msg: string, auth: { state: number, user: string },
-		status: (code: number, options?: StatusOptions | `${bigint}.${bigint}.${bigint}` | undefined) => void) {
+	static async authenticateUser(
+		msg: string, auth: { state: number, user: string },
+		status: (code: number, options?: StatusOptions | `${bigint}.${bigint}.${bigint}` | undefined) => void
+	) {
 		const [_, username, password] = Buffer.from(msg, "base64").toString().split("\0")
 
 		if (!username || !password) {
