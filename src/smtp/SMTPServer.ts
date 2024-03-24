@@ -1,4 +1,4 @@
-import sendStatus, { StatusOptions } from "./status.js"
+import sendStatus, { type StatusOptions } from "./status.js"
 import Logger from "../Logger.js"
 import SMTP from "./SMTP.js"
 import User from "../models/User.js"
