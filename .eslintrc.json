@@ -294,6 +294,7 @@
 		"wrap-regex":                    "warn",
 		"yield-star-spacing":           ["warn", "after"],
 
-		"@typescript-eslint/no-empty-function": "off"
+		"@typescript-eslint/no-empty-function": "off",
+		"@typescript-eslint/no-unused-vars": ["warn", {"destructuredArrayIgnorePattern": "^_"}]
     }
 }
