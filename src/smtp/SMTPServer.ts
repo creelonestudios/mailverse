@@ -40,12 +40,11 @@ export default class SMTPServer {
 			content: ""
 		}
 
-		// State:
-		// 0: No authentication
-		// 1: Waiting for authentication (AUTH PLAIN)
-		// 2: Authenticated
-		const auth = {
-			state: 0,
+		const auth: {
+			state: "none" | "waiting" | "authenticated",
+			user:  string
+		} = {
+			state: "none",
 			user:  ""
 		}
 
@@ -159,7 +158,7 @@ export default class SMTPServer {
 				// but that can be a security risk + it is also done with RCPT TO anyway
 				status(502)
 			} else if (msg.startsWith("EXPN")) status(502)
-			else if (msg.startsWith("AUTH PLAIN") || auth.state == 1) await SMTPServer.authPlain(msg, auth, info, status)
+			else if (msg.startsWith("AUTH PLAIN") || auth.state == "waiting") await SMTPServer.authPlain(msg, auth, info, status)
 			 else status(502)
 		})
 		sock.on("close", () => {
@@ -168,10 +167,10 @@ export default class SMTPServer {
 	}
 
 	static async authPlain(
-		msg: string, auth: { state: number, user: string }, info: { from: string, to: string[], content: string },
+		msg: string, auth: { state: "none" | "waiting" | "authenticated", user: string }, info: { from: string, to: string[], content: string },
 		status: (code: number, options?: StatusOptions | `${bigint}.${bigint}.${bigint}` | undefined) => void
 	) {
-		if (auth.state == 2 || info.from != "" || info.to.length != 0 || info.content != "") {
+		if (auth.state == "authenticated" || info.from != "" || info.to.length != 0 || info.content != "") {
 			// RFC 4954 Section 4:
 			// After a successful AUTH command completes, a server MUST reject any
 			// further AUTH commands with a 503 reply.
@@ -181,7 +180,7 @@ export default class SMTPServer {
 			status(503)
 		}
 
-		if (auth.state == 0) {
+		if (auth.state == "none") {
 			if (msg.split(" ").length == 3) {
 				await SMTPServer.authenticateUser(msg.split(" ")[2], auth, status)
 
@@ -189,19 +188,19 @@ export default class SMTPServer {
 			}
 
 			status(334)
-			auth.state = 1
-		} else if (auth.state == 1) await SMTPServer.authenticateUser(msg, auth, status)
+			auth.state = "waiting"
+		} else if (auth.state == "waiting") await SMTPServer.authenticateUser(msg, auth, status)
 	}
 
 	static async authenticateUser(
-		msg: string, auth: { state: number, user: string },
+		msg: string, auth: { state: "none" | "waiting" | "authenticated", user: string },
 		status: (code: number, options?: StatusOptions | `${bigint}.${bigint}.${bigint}` | undefined) => void
 	) {
 		const [_, username, password] = Buffer.from(msg, "base64").toString().split("\0")
 
 		if (!username || !password) {
 			status(501, "5.5.2")
-			auth.state = 0
+			auth.state = "none"
 
 			return
 		}
@@ -210,19 +209,19 @@ export default class SMTPServer {
 
 		if (!user) {
 			status(535)
-			auth.state = 0
+			auth.state = "none"
 
 			return
 		}
 
 		if (!(await verify(user.password, password))) {
 			status(535)
-			auth.state = 0
+			auth.state = "none"
 
 			return
 		}
 
-		auth.state = 2
+		auth.state = "authenticated"
 		auth.user = `${username}@${getConfig("host")}`
 		status(235, "2.7.0")
 	}
