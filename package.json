@@ -23,7 +23,7 @@
   "dependencies": {
     "argon2": "^0.40.1",
     "mariadb": "^3.2.3",
-    "mysql2": "^3.9.2",
+    "mysql2": "^3.9.7",
     "sequelize": "^6.37.1",
     "sequelize-typescript": "^2.1.6"
   },
