@@ -1,11 +1,12 @@
 import sendStatus, { type StatusOptions } from "./status.js"
 import Logger from "../Logger.js"
 import SMTP from "./SMTP.js"
-import User from "../models/User.js"
+// import User from "../models/User.js"
 import getConfig from "../config.js"
 import net from "net"
 import tls from "tls"
 import { verify } from "argon2"
+import User from "../db/User.js"
 
 const logger = new Logger("SMTPServer", "GREEN")
 
@@ -128,7 +129,8 @@ export default class SMTPServer {
 					return
 				}
 
-				const user = await User.findOne({ where: { username } })
+				// const user = await User.findOne({ where: { username } })
+				const user = await User.getUserFromUsername(username)
 
 				if (!user) {
 					status(550)
@@ -206,7 +208,8 @@ export default class SMTPServer {
 			return
 		}
 
-		const user = await User.findOne({ where: { username } })
+		// const user = await User.findOne({ where: { username } })
+		const user = await User.getUserFromUsername(username)
 
 		if (!user) {
 			status(535)

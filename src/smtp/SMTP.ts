@@ -1,9 +1,10 @@
 import { mkdir, writeFile } from "fs/promises"
 import Logger from "../Logger.js"
-import User from "../models/User.js"
 import crypto from "node:crypto"
 import getConfig from "../config.js"
-import { smtpupstream } from "../main.js"
+import { redis, smtpupstream } from "../main.js"
+import User from "../db/User.js"
+import Mail from "../db/Mail.js"
 
 const logger = new Logger("SMTP", "GREEN")
 
@@ -47,7 +48,7 @@ export default class SMTP {
 
 		recipients.forEach(async rec => {
 			logger.log(`Forwarding mail to ${rec}`)
-			const user = await User.findOne({ where: { username: rec.substring(0, rec.lastIndexOf("@")) } })
+			const user = await User.getUserFromUsername(rec.substring(0, rec.lastIndexOf("@")))
 
 			if (!user) {
 				logger.error(`User ${rec} does not exist.`)
@@ -56,11 +57,28 @@ export default class SMTP {
 				return
 			}
 
-			await user.$create("mail", {
-				from:    info.from,
-				to:      rec,
-				content: id
-			})
+			// await user.$create("mail", {
+			// 	from:    info.from,
+			// 	to:      rec,
+			// 	content: id
+			// })
+			const mailbox = await user.getDefaultMailbox()
+
+			if (!mailbox) {
+				logger.error(`User ${rec} does not have a default mailbox.`)
+
+				return
+			}
+
+			const newMail = new Mail(id, mailbox?.uidnext, [], [], new Date().toISOString(), info.content.length)
+
+			await newMail.save()
+			mailbox.uidnext++
+
+			redis.set(`mail:${id}:content`, info.content)
+
+			mailbox.mails.push(id)
+			await mailbox.save()
 
 			logger.log(`Forwarded mail to ${rec}`)
 		})

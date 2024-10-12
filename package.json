@@ -24,8 +24,10 @@
     "argon2": "^0.40.1",
     "mariadb": "^3.2.3",
     "mysql2": "^3.9.2",
+    "redis": "^4.7.0",
     "sequelize": "^6.37.1",
-    "sequelize-typescript": "^2.1.6"
+    "sequelize-typescript": "^2.1.6",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@microsoft/eslint-formatter-sarif": "^3.0.0",
