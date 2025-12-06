@@ -11,6 +11,8 @@ import Logger from "./Logger.js"
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 global.debug = getConfig("debug", false) as any
 
+new Logger("DEBUG", "PINK").debug("Debugging is enabled")
+
 export const redis = await createClient({ url: getConfig("redis.url", "redis://localhost:6379/") })
 
 redis.connect()

@@ -42,7 +42,10 @@ export default class IMAPServer {
 	}
 
 	connection(sock: net.Socket) {
-		logger.log("Client connected")
+		const cid = crypto.randomUUID().split("").slice(0, 8)
+			.join("")
+
+		logger.log(`[${cid}] Client connected`)
 		let state: IMAPState = "NOT_AUTHENTICATED"
 		let auth: IMAPAuth = {
 			authed:     false,
@@ -51,7 +54,7 @@ export default class IMAPServer {
 		let selectedBox: Mailbox | null = null
 		const status = createStatus(sock)
 
-		status(false, "OK", "IMAP4rev1 Service Ready")
+		status(false, "OK", "IMAP4rev2 Service Ready")
 
 		sock.on("data", async (data: Buffer) => {
 			const msg = data.toString()
@@ -67,7 +70,7 @@ export default class IMAPServer {
 		})
 
 		async function processCommand(msg: string) {
-			logger.log(`Received command: ${msg}`)
+			logger.log(`[${cid}] Received command: ${msg}`)
 
 			const splitter = msg.split(" ")
 			const [tag] = splitter
@@ -155,7 +158,7 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 				password = password.slice(1, -1)
 			}
 
-			logger.log(`Logging in as ${username} with password ${password}`)
+			logger.log(`Logging in`)
 
 			const user = await User.getUserFromUsername(username)
 
@@ -230,8 +233,49 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 		EXAMINE: (ctx: CommandContext) => { // Select mailbox read-only
 			ctx.status(ctx.tag, "NO", "EXAMINE not supported")
 		},
-		CREATE: (ctx: CommandContext) => { // Create mailbox
-			ctx.status(ctx.tag, "NO", "CREATE not supported")
+		CREATE: async (ctx: CommandContext) => { // Create mailbox
+			let [mailboxName] = ctx.args
+
+			if (!mailboxName) {
+				ctx.status(ctx.tag, "BAD", "CREATE requires a mailbox name")
+
+				return
+			}
+
+			if (mailboxName.startsWith("\"") && mailboxName.endsWith("\"")) {
+				mailboxName = mailboxName.slice(1, -1)
+			}
+
+			if (mailboxName.includes("/") || mailboxName.includes(" ")) {
+				// We don't support spaces or nested mailboxes (yet)
+				ctx.status(ctx.tag, "NO", "Invalid mailbox name")
+
+				return
+			}
+
+			logger.log(`Creating mailbox ${mailboxName}`)
+
+			const { user } = ctx.auth
+
+			if (!user) {
+				ctx.status(ctx.tag, "NO", "User not found")
+
+				return
+			}
+
+			if ((await user.getMailboxes()).find(mb => mb.name.toUpperCase() === mailboxName.toUpperCase())) {
+				ctx.status(ctx.tag, "NO", "Mailbox already exists")
+
+				return
+			}
+
+			const mailbox = new Mailbox(crypto.randomUUID(), mailboxName, user.username, 1, 1, [], [])
+
+			await mailbox.save()
+			user.mailboxes.push(mailbox.uuid)
+			await user.save()
+
+			ctx.status(ctx.tag, "OK", "CREATE completed")
 		},
 		DELETE: (ctx: CommandContext) => { // Delete mailbox
 			ctx.status(ctx.tag, "NO", "DELETE not supported")
@@ -245,12 +289,44 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 		UNSUBSCRIBE: (ctx: CommandContext) => { // Unsubscribe from mailbox
 			ctx.status(ctx.tag, "NO", "UNSUBSCRIBE not supported")
 		},
-		LIST: (ctx: CommandContext) => { // List mailboxes
-			ctx.status(ctx.tag, "NO", "LIST not supported")
+		LIST: async (ctx: CommandContext) => { // List mailboxes
+			// eslint-disable-next-line prefer-const
+			let [_delimiter, name] = ctx.args
+
+			if (!name) {
+				ctx.status(ctx.tag, "BAD", "LIST requires a name")
+
+				return
+			}
+
+			if (name.startsWith("\"") && name.endsWith("\"")) {
+				name = name.slice(1, -1)
+			}
+
+			const mailboxes = await ctx.auth.user?.getMailboxes()
+
+			if (!mailboxes) {
+				ctx.status(ctx.tag, "NO", "User has no mailboxes")
+
+				return
+			}
+
+			const filtered = name == "*" ? mailboxes : mailboxes.filter(mb => mb.name.toUpperCase().includes(name.toUpperCase()))
+
+			for (const mailbox of filtered) {
+				let attributes = `${mailbox.attributes.length == 0 ? "" : `\\${mailbox.attributes.join(" \\")}`}`
+				if (attributes.length > 0) attributes += " "
+
+				attributes += "\\HasNoChildren"
+
+				ctx.status(false, "LIST", `(${attributes}) "/" ${mailbox.name}`)
+			}
+
+			ctx.status(ctx.tag, "OK", "LIST completed")
 		},
 		NAMESPACE: (ctx: CommandContext) => { // Get namespace
-			// ctx.status(ctx.tag, "NO", "NAMESPACE not supported")
-			ctx.status(false, "NAMESPACE", `(("INBOX/" "/")) NIL NIL`) // We only support one namespace, the INBOX. Only personal mailboxes are supported (NIL)
+			ctx.status(false, "NAMESPACE", `(("" "/")) NIL NIL`) // We only support one namespace. Only personal mailboxes are supported (NIL)
+			ctx.status(ctx.tag, "OK", "NAMESPACE completed")
 		},
 		STATUS: (ctx: CommandContext) => { // Get mailbox status
 			ctx.status(ctx.tag, "NO", "STATUS not supported")
@@ -375,13 +451,101 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 					response += ")\r\n"
 					ctx.socket.write(response)
 				}
+
+				filteredIdx++
+			}
+
+			ctx.status(ctx.tag, "OK", `${useUID ? "UID " : ""}FETCH completed`)
+		},
+		STORE: async (ctx: CommandContext) => { // Store message data
+			let useUID = false
+			let [set, thing, ...itemsRaw] = ctx.args
+			if (set.toLowerCase() === "store") {
+				useUID = true
+				set = thing
+				;[thing] = itemsRaw
+				itemsRaw = itemsRaw.slice(1)
+			}
+
+			const items = itemsRaw.map(item => item.replace("(", "").replace(")", ""))
+
+			logger.log(`Storing ${thing} to messages ${set} with items ${items.join(", ")}`)
+
+			if (!set) {
+				ctx.status(ctx.tag, "BAD", "STORE requires a message set")
+
+				return
+			}
+
+			// Set is a range seperated by a colon.
+			// eslint-disable-next-line prefer-const
+			let [start, end] = set.split(":")
+			if (!end) end = start
+
+			// It may contain a star, which means the last message.
+			if (end === "*") {
+				if (!ctx.selectedBox) {
+					ctx.status(ctx.tag, "NO", "No mailbox selected")
+
+					return
+				}
+
+				end = ctx.selectedBox?.mails.length.toString()
+			}
+
+			const startRange = parseInt(start, 10)
+			const endRange = parseInt(end, 10)
+
+			if (isNaN(startRange) || isNaN(endRange)) {
+				ctx.status(ctx.tag, "BAD", "Invalid message set")
+
+				return
+			}
+
+			const mails = await ctx.selectedBox?.getMails()
+
+			if (!mails) {
+				ctx.status(ctx.tag, "NO", "No messages found")
+
+				return
+			}
+
+			let filteredIdx = 1
+			for (let idx = 0; idx < mails.length; idx++) {
+				const mail = mails[idx]
+
+				if (!mail) {
+					logger.error(`Mail ${idx} not found`)
+
+					continue
+				}
+
+				let i = idx
+				if (useUID) i = mail.uid
+				if (i >= startRange && i <= endRange) {
+					if (thing.toUpperCase() === "+FLAGS") {
+						const flags = items.map(flag => flag.replace("\\", ""))
+
+						logger.log(`Adding flags ${flags.join(", ")} to message ${i}`)
+
+						mail.flags.push(...flags)
+					} else if (thing.toUpperCase() === "-FLAGS") {
+						const flags = items.map(flag => flag.replace("\\", ""))
+
+						logger.log(`Removing flags ${flags.join(", ")} to message ${i}`)
+
+						mail.flags = mail.flags.filter(flag => !flags.includes(flag))
+					}
+
+					ctx.socket.write(`* ${filteredIdx} FETCH (FLAGS (${mail.flags.length == 0 ? "" : `\\${mail.flags.join(" \\")}`}))\r\n`)
+					// eslint-disable-next-line no-await-in-loop
+					await mail.save()
+				}
+
 				filteredIdx++
 			}
 
 			ctx.status(ctx.tag, "OK", "UID FETCH completed")
-		},
-		STORE: (ctx: CommandContext) => { // Store message data
-			ctx.status(ctx.tag, "NO", "STORE not supported")
 		},
 		COPY: (ctx: CommandContext) => { // Copy message
 			ctx.status(ctx.tag, "NO", "COPY not supported")
@@ -391,7 +555,18 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 		},
 		UID: (ctx: CommandContext) => { // Use UID for commands
 			// ctx.status(ctx.tag, "NO", "UID not supported")
-			commands.SELECTED.FETCH(ctx)
+			if (ctx.args.length < 2) {
+				ctx.status(ctx.tag, "BAD", "UID requires a command and arguments")
+
+				return
+			}
+			if (ctx.args[0].toUpperCase() === "FETCH") {
+				commands.SELECTED.FETCH(ctx)
+			} else if (ctx.args[0].toUpperCase() === "STORE") {
+				commands.SELECTED.STORE(ctx)
+			}
 		}
 	}
 }
+
+commands.SELECTED = { ...commands.SELECTED, ...commands.AUTHENTICATED }

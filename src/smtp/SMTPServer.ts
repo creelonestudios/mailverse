@@ -57,7 +57,7 @@ export default class SMTPServer {
 			if (receivingData) {
 				logger.log(`Received message content: ${msg}`)
 				info.content += msg
-				if (msg.endsWith(".\r\n")) {
+				if (msg == "\r\n.\r\n" || msg == "\n.\n") {
 					receivingData = false
 					info.content = info.content.substring(0, info.content.length - 3).replaceAll("\r\n", "\n")
 					await SMTP.handleNewMail(info)
