@@ -317,12 +317,45 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 				let attributes = `${mailbox.attributes.length == 0 ? "" : `\\${mailbox.attributes.join(" \\")}`}`
 				if (attributes.length > 0) attributes += " "
 
-				attributes += "\\HasNoChildren"
+				attributes += "\\HasNoChildren \\UnMarked"
 
 				ctx.status(false, "LIST", `(${attributes}) "/" ${mailbox.name}`)
 			}
 
 			ctx.status(ctx.tag, "OK", "LIST completed")
+		},
+		LSUB: async (ctx: CommandContext) => { // List mailboxes (old way)
+			// eslint-disable-next-line prefer-const
+			let [_delimiter, name] = ctx.args
+
+			if (!name) {
+				ctx.status(ctx.tag, "BAD", "LSUB requires a name")
+
+				return
+			}
+
+			if (name.startsWith("\"") && name.endsWith("\"")) {
+				name = name.slice(1, -1)
+			}
+
+			const mailboxes = await ctx.auth.user?.getMailboxes()
+
+			if (!mailboxes) {
+				ctx.status(ctx.tag, "NO", "User has no mailboxes")
+
+				return
+			}
+
+			const filtered = name == "*" ? mailboxes : mailboxes.filter(mb => mb.name.toUpperCase().includes(name.toUpperCase()))
+
+			for (const mailbox of filtered) {
+				let attributes = `${mailbox.attributes.length == 0 ? "" : `\\${mailbox.attributes.join(" \\")}`}`
+				if (attributes.length > 0) attributes += " "
+
+				ctx.status(false, "LSUB", `(${attributes}) "/" ${mailbox.name}`)
+			}
+
+			ctx.status(ctx.tag, "OK", "LSUB completed")
 		},
 		NAMESPACE: (ctx: CommandContext) => { // Get namespace
 			ctx.status(false, "NAMESPACE", `(("" "/")) NIL NIL`) // We only support one namespace. Only personal mailboxes are supported (NIL)
