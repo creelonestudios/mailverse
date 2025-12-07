@@ -5,13 +5,16 @@ import createStatus from "./status.js"
 import net from "net"
 import tls from "tls"
 import { verify } from "argon2"
+import SaslProvider, { SASL_PROVIDERS } from "../sasl/SaslProvider.js"
 
 const logger = new Logger("IMAP", "GREEN")
 
-type IMAPState = "NOT_AUTHENTICATED" | "AUTHENTICATED" | "SELECTED" | "LOGOUT"
+type IMAPState = "NOT_AUTHENTICATED" | "AUTHENTICATED" | "SELECTED" | "LOGOUT" | "AUTHENTICATING"
 type IMAPAuth = {
 	authed: boolean,
-	user: User | null
+	user: User | null,
+	provider: SaslProvider | null,
+	tag: string | null
 }
 type CommandContext = {
 	status: ReturnType<typeof createStatus>,
@@ -49,7 +52,9 @@ export default class IMAPServer {
 		let state: IMAPState = "NOT_AUTHENTICATED"
 		let auth: IMAPAuth = {
 			authed:     false,
-			user:       null
+			user:       null,
+			provider:   null,
+			tag:        null
 		}
 		let selectedBox: Mailbox | null = null
 		const status = createStatus(sock)
@@ -72,8 +77,31 @@ export default class IMAPServer {
 		async function processCommand(msg: string) {
 			logger.log(`[${cid}] Received command: ${msg}`)
 
+			if (state === "AUTHENTICATING" && auth.provider && auth.tag) {
+				const res = await auth.provider.data(msg)
+
+				if (res.type === "failure") {
+					auth.provider = null
+					state = "NOT_AUTHENTICATED"
+					status(auth.tag, "NO", "Authentication failed", "AUTHENTICATIONFAILED")
+					auth.tag = null
+				} else if (res.type === "success" && res.user) {
+					auth.authed = true
+					auth.user = res.user
+					state = "AUTHENTICATED"
+					status(auth.tag, "OK", "Authentication successful")
+				}
+			}
+
 			const splitter = msg.split(" ")
 			const [tag] = splitter
+
+			if (splitter.length < 2) {
+				status(tag, "BAD", "Invalid command format")
+
+				return
+			}
+
 			const command = splitter[1].toUpperCase().trim()
 			const args = splitter.slice(2).map(arg => arg.trim())
 
@@ -135,7 +163,21 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 			ctx.status(ctx.tag, "NO", "STARTTLS not supported")
 		},
 		AUTHENTICATE: (ctx: CommandContext) => {
-			ctx.status(ctx.tag, "NO", "AUTHENTICATE not supported")
+			const providerName = ctx.args[0].toUpperCase()
+			const provider = SASL_PROVIDERS[providerName]
+
+			if (!provider) {
+				ctx.status(ctx.tag, "NO", `Unsupported authentication mechanism: ${providerName}`)
+
+				return
+			}
+
+			const saslProvider = new provider()
+
+			ctx.socket.write(`+ \r\n`)
+			ctx.state = "AUTHENTICATING"
+			ctx.auth.provider = saslProvider
+			ctx.auth.tag = ctx.tag
 		},
 		LOGIN: async (ctx: CommandContext) => { // Spec says this should only be used as a last resort when AUTHENTICATE fails
 			// ctx.status(ctx.tag, "NO", "LOGIN not supported")
