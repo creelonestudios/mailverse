@@ -243,7 +243,7 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 
 			const saslProvider = new provider()
 
-			if (getConfig("imap.disallowInsecureAuthOverPlaintext", true) && !saslProvider.isSecure() && !(ctx.socket instanceof tls.TLSSocket)) {
+			if (!getConfig("imap.dangerouslyAllowInsecureAuthOverPlaintext", false) && !saslProvider.isSecure() && !(ctx.socket instanceof tls.TLSSocket)) {
 				ctx.status(ctx.tag, "NO", `Insecure authentication over plaintext connections is not allowed`, "PRIVACYREQUIRED")
 
 				return
@@ -262,7 +262,7 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 				return
 			}
 
-			if (getConfig("imap.disallowInsecureAuthOverPlaintext", true) && !(ctx.socket instanceof tls.TLSSocket)) {
+			if (!getConfig("imap.dangerouslyAllowInsecureAuthOverPlaintext", false) && !(ctx.socket instanceof tls.TLSSocket)) {
 				// eslint-disable-next-line max-len
 				ctx.status("*", "BAD", "Insecure authentication not allowed over plaintext connections, but your client did it anyway. Your password may have been sent in plaintext over the internet!", "ALERT")
 				ctx.status(ctx.tag, "NO", `Insecure authentication over plaintext connections is not allowed`, "PRIVACYREQUIRED")
