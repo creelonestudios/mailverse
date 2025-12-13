@@ -15,12 +15,12 @@ type RedisMail = z.infer<typeof RedisMail>
 
 export default class Mail {
 
-	#uuid: string; #uid: number; #flags: string[]; #keywords: string[]; #date: string; #size: number
+	#uuid: string; #uid: number; #flags: Set<string>; #keywords: string[]; #date: string; #size: number
 
 	constructor(uuid: string, uid: number, flags: string[], keywords: string[], date: string, size: number) {
 		this.#uuid = uuid
 		this.#uid = uid
-		this.#flags = flags
+		this.#flags = new Set(flags)
 		this.#keywords = keywords
 		this.#date = date
 		this.#size = size
@@ -38,7 +38,7 @@ export default class Mail {
 		await redis.json.set(`mail:${this.#uuid}`, "$", RedisMail.parse({
 			uuid:     this.#uuid,
 			uid:      this.#uid,
-			flags:    this.#flags,
+			flags:    Array.from(this.#flags),
 			keywords: this.#keywords,
 			date:     this.#date,
 			size:     this.#size
@@ -67,11 +67,11 @@ export default class Mail {
 	}
 
 	get flags(): string[] {
-		return this.#flags
+		return Array.from(this.#flags)
 	}
 
 	set flags(flags: string[]) {
-		this.#flags = flags
+		this.#flags = new Set(flags)
 		this.save()
 	}
 
