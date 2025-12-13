@@ -569,17 +569,58 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 		}
 	},
 	SELECTED: {
-		CLOSE: (ctx: CommandContext) => { // Close mailbox
-			// TODO: Expunge deleted messages
-			commands.AUTHENTICATED.UNSELECT(ctx)
+		CLOSE: async (ctx: CommandContext) => { // Close mailbox
+			const fakeSocket = ctx.socket
+
+			fakeSocket.write = () => true
+
+			await commands.SELECTED.EXPUNGE({
+				...ctx,
+				status: () => { /**/ },
+				socket: fakeSocket
+			})
+			commands.SELECTED.UNSELECT(ctx)
 		},
 		UNSELECT: (ctx: CommandContext) => { // Unselect mailbox
 			ctx.state = "AUTHENTICATED"
 			ctx.selectedBox = null
 			ctx.status(ctx.tag, "OK", "UNSELECT completed")
 		},
-		EXPUNGE: (ctx: CommandContext) => { // Expunge mailbox
-			ctx.status(ctx.tag, "NO", "EXPUNGE not supported")
+		EXPUNGE: async (ctx: CommandContext) => { // Expunge mailbox
+			if (!ctx.selectedBox) {
+				ctx.status(ctx.tag, "NO", "No mailbox selected")
+
+				return
+			}
+
+			const mails = await ctx.selectedBox.getMails()
+
+			if (!mails) {
+				ctx.status(ctx.tag, "NO", "No messages found")
+
+				return
+			}
+
+			for (let idx = 0; idx < mails.length; idx++) {
+				const mail = mails[idx]
+
+				if (!mail) {
+					logger.error(`Mail ${idx} not found`)
+
+					continue
+				}
+
+				if (mail.flags.includes("Deleted")) {
+					// eslint-disable-next-line no-await-in-loop
+					await mail.delete()
+					ctx.selectedBox.mails = ctx.selectedBox.mails.filter(mId => mId !== mail.uuid)
+					ctx.socket.write(`* ${mail.uid} EXPUNGE\r\n`)
+				}
+			}
+
+			await ctx.selectedBox.save()
+
+			ctx.status(ctx.tag, "OK", "EXPUNGE completed")
 		},
 		SEARCH: (ctx: CommandContext) => { // Search mailbox
 			ctx.status(ctx.tag, "NO", "SEARCH not supported")
@@ -761,13 +802,17 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 
 						logger.log(`Adding flags ${flags.join(", ")} to message ${i}`)
 
-						mail.flags.push(...flags)
+						const newFlags = [...mail.flags, ...flags]
+
+						mail.flags = Array.from(new Set(newFlags))
 					} else if (thing.toUpperCase() === "-FLAGS") {
 						const flags = items.map(flag => flag.replace("\\", ""))
 
 						logger.log(`Removing flags ${flags.join(", ")} to message ${i}`)
 
-						mail.flags = mail.flags.filter(flag => !flags.includes(flag))
+						const newFlags = mail.flags.filter(flag => !flags.includes(flag))
+
+						mail.flags = Array.from(new Set(newFlags))
 					}
 
 					ctx.socket.write(`* ${filteredIdx} FETCH (FLAGS (${mail.flags.length == 0 ? "" : `\\${mail.flags.join(" \\")}`}))\r\n`)

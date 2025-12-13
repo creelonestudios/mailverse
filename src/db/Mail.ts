@@ -53,6 +53,11 @@ export default class Mail {
 		return content
 	}
 
+	async delete(): Promise<void> {
+		await redis.del(`mail:${this.#uuid}`)
+		await redis.del(`mail:${this.#uuid}:content`)
+	}
+
 	get uuid(): string {
 		return this.#uuid
 	}
