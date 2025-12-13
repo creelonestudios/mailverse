@@ -7,6 +7,7 @@ export interface SaslResponse {
 }
 
 export default interface SaslProvider {
+	isSecure(): boolean;
 	data(data: string): Promise<SaslResponse>;
 }
 

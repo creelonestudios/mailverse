@@ -4,6 +4,10 @@ import SaslProvider, { SaslResponse } from "./SaslProvider.js"
 
 export default class PlainSaslProvider implements SaslProvider {
 
+	isSecure(): boolean {
+		return false
+	}
+
 	async data(data: string): Promise<SaslResponse> {
 		data = atob(data)
 

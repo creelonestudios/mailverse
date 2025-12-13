@@ -6,6 +6,7 @@ import net from "net"
 import tls from "tls"
 import { verify } from "argon2"
 import SaslProvider, { SASL_PROVIDERS } from "../sasl/SaslProvider.js"
+import getConfig from "../config.js"
 
 const logger = new Logger("IMAP", "GREEN")
 
@@ -174,6 +175,12 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 
 			const saslProvider = new provider()
 
+			if (getConfig("imap.disallowInsecureAuthOverPlaintext", true) && !saslProvider.isSecure() && !(ctx.socket instanceof tls.TLSSocket)) {
+				ctx.status(ctx.tag, "NO", `Insecure authentication over plaintext connections is not allowed`, "PRIVACYREQUIRED")
+
+				return
+			}
+
 			ctx.socket.write(`+ \r\n`)
 			ctx.state = "AUTHENTICATING"
 			ctx.auth.provider = saslProvider
@@ -183,6 +190,14 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 			// ctx.status(ctx.tag, "NO", "LOGIN not supported")
 			if (ctx.args.length != 2) {
 				ctx.status(ctx.tag, "BAD", "LOGIN requires 2 arguments")
+
+				return
+			}
+
+			if (getConfig("imap.disallowInsecureAuthOverPlaintext", true) && !(ctx.socket instanceof tls.TLSSocket)) {
+				// eslint-disable-next-line max-len
+				ctx.status("*", "BAD", "Insecure authentication not allowed over plaintext connections, but your client did it anyway. Your password may have been sent in plaintext over the internet!", "ALERT")
+				ctx.status(ctx.tag, "NO", `Insecure authentication over plaintext connections is not allowed`, "PRIVACYREQUIRED")
 
 				return
 			}
