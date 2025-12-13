@@ -7,15 +7,27 @@ import tls from "tls"
 import { verify } from "argon2"
 import SaslProvider, { SASL_PROVIDERS } from "../sasl/SaslProvider.js"
 import getConfig from "../config.js"
+import { parseImapDate } from "./IMAPDate.js"
+import Mail from "../db/Mail.js"
+import { redis } from "../main.js"
 
 const logger = new Logger("IMAP", "GREEN")
 
-type IMAPState = "NOT_AUTHENTICATED" | "AUTHENTICATED" | "SELECTED" | "LOGOUT" | "AUTHENTICATING"
+type IMAPState = "NOT_AUTHENTICATED" | "AUTHENTICATED" | "SELECTED" | "LOGOUT" | "AUTHENTICATING" | "APPENDING"
 type IMAPAuth = {
 	authed: boolean,
 	user: User | null,
 	provider: SaslProvider | null,
 	tag: string | null
+}
+type AppendData = {
+	mailbox: string,
+	flags: string[],
+	date: Date,
+	bytesTotal: number,
+	data: Buffer,
+	tag: string,
+	prevState: IMAPState
 }
 type CommandContext = {
 	status: ReturnType<typeof createStatus>,
@@ -24,7 +36,8 @@ type CommandContext = {
 	tag: string,
 	args: string[],
 	auth: IMAPAuth,
-	selectedBox: Mailbox | null
+	selectedBox: Mailbox | null,
+	append: AppendData | null
 }
 
 export default class IMAPServer {
@@ -58,6 +71,7 @@ export default class IMAPServer {
 			tag:        null
 		}
 		let selectedBox: Mailbox | null = null
+		let append: AppendData | null = null
 		const status = createStatus(sock)
 
 		status(false, "OK", "IMAP4rev2 Service Ready")
@@ -65,7 +79,54 @@ export default class IMAPServer {
 		sock.on("data", async (data: Buffer) => {
 			const msg = data.toString()
 
-			// logger.log(`Received data: ${msg.trim()}`)
+			logger.log(`Received data: ${msg.trim()}`)
+
+			if (state === "APPENDING" && append != null && auth.user) {
+				if (append.data.length >= append.bytesTotal) {
+					// We have already received all data
+					return
+				}
+
+				append.data = Buffer.concat([append.data, data])
+
+				const receivedBytes = append.data.length
+
+				logger.log(`[${cid}] APPEND received ${receivedBytes}/${append.bytesTotal} bytes`)
+
+				if (receivedBytes >= append.bytesTotal) {
+					let mailbox = await auth.user.getDefaultMailbox()
+					if (append.mailbox) {
+						const targetMailbox = append.mailbox
+						const mailboxes = await auth.user.getMailboxes()
+
+						mailbox = mailboxes.find(mb => mb.name.toUpperCase() === targetMailbox.toUpperCase())
+					}
+
+					if (!mailbox) {
+						status(append.tag, "NO", "Mailbox not found")
+						state = append.prevState
+						append = null
+
+						return
+					}
+
+					const mailId = crypto.randomUUID()
+					const newMail = new Mail(mailId, mailbox?.uidnext, append.flags, [], append.date.toISOString(), append.bytesTotal)
+
+					await newMail.save()
+					mailbox.uidnext++
+					redis.set(`mail:${mailId}:content`, append.data.toString())
+
+					mailbox.mails.push(mailId)
+					await mailbox.save()
+
+					status(append.tag, "OK", "Append completed")
+					state = append.prevState
+					append = null
+				}
+
+				return
+			}
 
 			const messages = msg.split("\r\n").filter(m => m.trim() != "")
 
@@ -92,6 +153,8 @@ export default class IMAPServer {
 					state = "AUTHENTICATED"
 					status(auth.tag, "OK", "Authentication successful")
 				}
+
+				return
 			}
 
 			const splitter = msg.split(" ")
@@ -113,11 +176,14 @@ export default class IMAPServer {
 				tag,
 				args,
 				auth,
-				selectedBox
+				selectedBox,
+				append
 			}
 
 			try {
-				if (commands.ANY[command]) {
+				if (state === "AUTHENTICATING" || state === "APPENDING") {
+					// We are in the middle of an AUTHENTICATE or APPEND command, ignore other commands
+				} else if (commands.ANY[command]) {
 					await commands.ANY[command](ctx)
 				} else if (commands[state][command]) {
 					await commands[state][command](ctx)
@@ -135,6 +201,8 @@ export default class IMAPServer {
 			auth = ctx.auth
 			// eslint-disable-next-line prefer-destructuring
 			selectedBox = ctx.selectedBox
+			// eslint-disable-next-line prefer-destructuring
+			append = ctx.append
 		}
 
 		sock.addListener("close", () => {
@@ -422,7 +490,79 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 			ctx.status(ctx.tag, "NO", "STATUS not supported")
 		},
 		APPEND: (ctx: CommandContext) => { // Append message to mailbox
-			ctx.status(ctx.tag, "NO", "APPEND not supported")
+			// ctx.status(ctx.tag, "NO", "APPEND not supported")
+			const bytesTotalStr = ctx.args[ctx.args.length - 1]
+
+			if (!(bytesTotalStr.includes("{") && bytesTotalStr.includes("}"))) {
+				ctx.status(ctx.tag, "BAD", "APPEND requires literal byte count")
+			}
+
+			const bytesTotal = parseInt(bytesTotalStr.replace(/[{}]/g, ""), 10)
+
+			if (isNaN(bytesTotal)) {
+				ctx.status(ctx.tag, "BAD", "Invalid byte count")
+			}
+
+			let flags: string[] = []
+			const date = new Date()
+
+			if (ctx.args.length > 2) {
+				// join the flags back together (from opening parenthesis to closing parenthesis)
+				let flagsStr = ""
+				let inFlags = false
+				for (const arg of ctx.args.slice(1, ctx.args.length - 1)) {
+					if (arg.startsWith("(")) inFlags = true
+					if (inFlags) {
+						flagsStr += `${arg} `
+					}
+					if (arg.endsWith(")")) inFlags = false
+				}
+
+				flagsStr = flagsStr.trim()
+				if (flagsStr.startsWith("(") && flagsStr.endsWith(")")) {
+					flagsStr = flagsStr.slice(1, -1)
+				}
+
+				flags = flagsStr.split(" ").map(f => f.replace("\\", ""))
+			}
+
+			if (ctx.args.length > 3) {
+				// Date is the argument before the byte count
+				const dateStr = ctx.args[ctx.args.length - 2]
+				let cleanDateStr = dateStr
+				if (dateStr.startsWith("\"") && dateStr.endsWith("\"")) {
+					cleanDateStr = dateStr.slice(1, -1)
+				}
+
+				const dateISO = parseImapDate(cleanDateStr)
+
+				if (dateISO) {
+					// Valid date
+					date.setTime(dateISO.getTime())
+				}
+			}
+
+			// eslint-disable-next-line prefer-destructuring
+			const rawMailbox = ctx.args[0]
+			let mailbox = ""
+
+			if (rawMailbox.startsWith("\"") && rawMailbox.endsWith("\"")) {
+				mailbox = rawMailbox.slice(1, -1)
+			} else {
+				mailbox = rawMailbox
+			}
+
+			ctx.state = "APPENDING"
+			ctx.append = {
+				mailbox,
+				bytesTotal,
+				flags,
+				date,
+				data:      Buffer.from(""),
+				tag:       ctx.tag,
+				prevState: ctx.state
+			}
+			ctx.socket.write("+ OK Ready for literal data\r\n")
 		},
 		IDLE: (ctx: CommandContext) => { // Wait for mailbox changes
 			ctx.status(ctx.tag, "NO", "IDLE not supported")
@@ -635,13 +775,201 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 				filteredIdx++
 			}
 
-			ctx.status(ctx.tag, "OK", "UID FETCH completed")
+			ctx.status(ctx.tag, "OK", "FETCH completed")
 		},
-		COPY: (ctx: CommandContext) => { // Copy message
-			ctx.status(ctx.tag, "NO", "COPY not supported")
+		COPY: async (ctx: CommandContext) => { // Copy message
+			let useUID = false
+			let [set, mailboxRaw] = ctx.args
+			if (set.toLowerCase() === "copy") {
+				useUID = true
+				;[set] = ctx.args.slice(1)
+				// eslint-disable-next-line prefer-destructuring
+				mailboxRaw = ctx.args[2]
+			}
+
+			if (!set || !mailboxRaw) {
+				ctx.status(ctx.tag, "BAD", "COPY requires a message set and a mailbox")
+
+				return
+			}
+
+			let mailboxName = mailboxRaw
+			if (mailboxRaw.startsWith("\"") && mailboxRaw.endsWith("\"")) {
+				mailboxName = mailboxRaw.slice(1, -1)
+			}
+
+			logger.log(`Copying messages ${set} to mailbox ${mailboxName}`)
+
+			// Set is a range seperated by a colon.
+			// eslint-disable-next-line prefer-const
+			let [start, end] = set.split(":")
+			if (!end) end = start
+
+			const startRange = parseInt(start, 10)
+			const endRange = parseInt(end, 10)
+
+			if (isNaN(startRange) || isNaN(endRange)) {
+				ctx.status(ctx.tag, "BAD", "Invalid message set")
+
+				return
+			}
+
+			const mails = await ctx.selectedBox?.getMails()
+
+			if (!mails) {
+				ctx.status(ctx.tag, "NO", "No messages found")
+
+				return
+			}
+
+			// Find target mailbox
+			const mailboxes = await ctx.auth.user?.getMailboxes()
+
+			if (!mailboxes) {
+				ctx.status(ctx.tag, "NO", "User has no mailboxes")
+
+				return
+			}
+
+			const targetMailbox = mailboxes.find(mb => mb.name.toUpperCase() === mailboxName.toUpperCase())
+
+			if (!targetMailbox) {
+				ctx.status(ctx.tag, "NO", "Target mailbox not found")
+
+				return
+			}
+
+			for (let idx = 0; idx < mails.length; idx++) {
+				const mail = mails[idx]
+
+				if (!mail) {
+					logger.error(`Mail ${idx} not found`)
+
+					continue
+				}
+
+				let i = idx
+				if (useUID) i = mail.uid
+				if (i >= startRange && i <= endRange) {
+					// Copy mail
+					const newMailId = crypto.randomUUID()
+					const newMail = new Mail(newMailId, targetMailbox.uidnext, mail.flags, [], mail.date, mail.size)
+
+					// eslint-disable-next-line no-await-in-loop
+					const content = await mail.getContent()
+
+					redis.set(`mail:${newMailId}:content`, content)
+
+					// eslint-disable-next-line no-await-in-loop
+					await newMail.save()
+					targetMailbox.uidnext++
+					targetMailbox.mails.push(newMailId)
+					// eslint-disable-next-line no-await-in-loop
+					await targetMailbox.save()
+				}
+			}
+
+			ctx.status(ctx.tag, "OK", "COPY completed")
 		},
-		MOVE: (ctx: CommandContext) => { // Move message
-			ctx.status(ctx.tag, "NO", "MOVE not supported")
+		MOVE: async (ctx: CommandContext) => { // Move message
+			let useUID = false
+			let [set, mailboxRaw] = ctx.args
+			if (set.toLowerCase() === "move") {
+				useUID = true
+				;[set] = ctx.args.slice(1)
+				// eslint-disable-next-line prefer-destructuring
+				mailboxRaw = ctx.args[2]
+			}
+
+			if (!set || !mailboxRaw) {
+				ctx.status(ctx.tag, "BAD", "MOVE requires a message set and a mailbox")
+
+				return
+			}
+
+			let mailboxName = mailboxRaw
+			if (mailboxRaw.startsWith("\"") && mailboxRaw.endsWith("\"")) {
+				mailboxName = mailboxRaw.slice(1, -1)
+			}
+
+			logger.log(`Copying messages ${set} to mailbox ${mailboxName}`)
+
+			// Set is a range seperated by a colon.
+			// eslint-disable-next-line prefer-const
+			let [start, end] = set.split(":")
+			if (!end) end = start
+
+			const startRange = parseInt(start, 10)
+			const endRange = parseInt(end, 10)
+
+			if (isNaN(startRange) || isNaN(endRange)) {
+				ctx.status(ctx.tag, "BAD", "Invalid message set")
+
+				return
+			}
+
+			const mails = await ctx.selectedBox?.getMails()
+
+			if (!mails) {
+				ctx.status(ctx.tag, "NO", "No messages found")
+
+				return
+			}
+
+			// Find target mailbox
+			const mailboxes = await ctx.auth.user?.getMailboxes()
+
+			if (!mailboxes) {
+				ctx.status(ctx.tag, "NO", "User has no mailboxes")
+
+				return
+			}
+
+			const targetMailbox = mailboxes.find(mb => mb.name.toUpperCase() === mailboxName.toUpperCase())
+
+			if (!targetMailbox) {
+				ctx.status(ctx.tag, "NO", "Target mailbox not found")
+
+				return
+			}
+
+			for (let idx = 0; idx < mails.length; idx++) {
+				const mail = mails[idx]
+
+				if (!mail) {
+					logger.error(`Mail ${idx} not found`)
+
+					continue
+				}
+
+				let i = idx
+				if (useUID) i = mail.uid
+				if (i >= startRange && i <= endRange) {
+					// Remove from current mailbox
+					if (ctx.selectedBox) {
+						ctx.selectedBox.mails = ctx.selectedBox.mails.filter(m => m !== mail.uuid)
+						// eslint-disable-next-line no-await-in-loop
+						await ctx.selectedBox?.save()
+					}
+
+					// Move mail
+					mail.uid = targetMailbox.uidnext
+
+					// eslint-disable-next-line no-await-in-loop
+					const content = await mail.getContent()
+
+					redis.set(`mail:${mail.uid}:content`, content)
+
+					// eslint-disable-next-line no-await-in-loop
+					await mail.save()
+					targetMailbox.uidnext++
+					targetMailbox.mails.push(mail.uuid)
+					// eslint-disable-next-line no-await-in-loop
+					await targetMailbox.save()
+				}
+			}
+
+			ctx.status(ctx.tag, "OK", "MOVE completed")
 		},
 		UID: (ctx: CommandContext) => { // Use UID for commands
 			// ctx.status(ctx.tag, "NO", "UID not supported")
@@ -654,6 +982,10 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 				commands.SELECTED.FETCH(ctx)
 			} else if (ctx.args[0].toUpperCase() === "STORE") {
 				commands.SELECTED.STORE(ctx)
+			} else if (ctx.args[0].toUpperCase() === "COPY") {
+				commands.SELECTED.COPY(ctx)
+			} else if (ctx.args[0].toUpperCase() === "MOVE") {
+				commands.SELECTED.MOVE(ctx)
 			}
 		}
 	}

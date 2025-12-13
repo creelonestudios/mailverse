@@ -61,6 +61,11 @@ export default class Mail {
 		return this.#uid
 	}
 
+	set uid(uid: number) {
+		this.#uid = uid
+		this.save()
+	}
+
 	get flags(): string[] {
 		return this.#flags
 	}
