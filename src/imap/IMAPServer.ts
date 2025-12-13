@@ -570,10 +570,13 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 	},
 	SELECTED: {
 		CLOSE: (ctx: CommandContext) => { // Close mailbox
-			ctx.status(ctx.tag, "NO", "CLOSE not supported")
+			// TODO: Expunge deleted messages
+			commands.AUTHENTICATED.UNSELECT(ctx)
 		},
 		UNSELECT: (ctx: CommandContext) => { // Unselect mailbox
-			ctx.status(ctx.tag, "NO", "UNSELECT not supported")
+			ctx.state = "AUTHENTICATED"
+			ctx.selectedBox = null
+			ctx.status(ctx.tag, "OK", "UNSELECT completed")
 		},
 		EXPUNGE: (ctx: CommandContext) => { // Expunge mailbox
 			ctx.status(ctx.tag, "NO", "EXPUNGE not supported")
