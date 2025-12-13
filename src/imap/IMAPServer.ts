@@ -1,15 +1,15 @@
+import SaslProvider, { SASL_PROVIDERS } from "../sasl/SaslProvider.js"
 import Logger from "../Logger.js"
+import Mail from "../db/Mail.js"
 import Mailbox from "../db/Mailbox.js"
 import User from "../db/User.js"
 import createStatus from "./status.js"
+import getConfig from "../config.js"
 import net from "net"
+import { parseImapDate } from "./IMAPDate.js"
+import { redis } from "../main.js"
 import tls from "tls"
 import { verify } from "argon2"
-import SaslProvider, { SASL_PROVIDERS } from "../sasl/SaslProvider.js"
-import getConfig from "../config.js"
-import { parseImapDate } from "./IMAPDate.js"
-import Mail from "../db/Mail.js"
-import { redis } from "../main.js"
 
 const logger = new Logger("IMAP", "GREEN")
 

@@ -1,4 +1,5 @@
 import IMAPServer from "./imap/IMAPServer.js"
+import Logger from "./Logger.js"
 import POP3Server from "./pop3/POP3Server.js"
 import POP3Upstream from "./upstreams/POP3Upstream.js"
 import SMTPServer from "./smtp/SMTPServer.js"
@@ -6,7 +7,6 @@ import SMTPUpstream from "./upstreams/SMTPUpstream.js"
 import { createClient } from "redis"
 import getConfig from "./config.js"
 import { readFile } from "node:fs/promises"
-import Logger from "./Logger.js"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 global.debug = getConfig("debug", false) as any
