@@ -25,7 +25,7 @@ type AppendData = {
 	flags: string[],
 	date: Date,
 	bytesTotal: number,
-	data: Buffer,
+	data: Uint8Array,
 	tag: string,
 	prevState: IMAPState
 }
@@ -76,7 +76,7 @@ export default class IMAPServer {
 
 		status(false, "OK", "IMAP4rev2 Service Ready")
 
-		sock.on("data", async (data: Buffer) => {
+		sock.on("data", async (data: Uint8Array) => {
 			const msg = data.toString()
 
 			logger.log(`Received data: ${msg.trim()}`)
@@ -87,7 +87,7 @@ export default class IMAPServer {
 					return
 				}
 
-				append.data = Buffer.concat([append.data, data])
+				append.data = Uint8Array.from([...append.data, ...data])
 
 				const receivedBytes = append.data.length
 
@@ -439,7 +439,7 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 			const filtered = name === "*" ? mailboxes : mailboxes.filter(mb => mb.name.toUpperCase().includes(name.toUpperCase()))
 
 			for (const mailbox of filtered) {
-				let attributes = `${mailbox.attributes.length == 0 ? "" : `\\${mailbox.attributes.join(" \\")}`}`
+				let attributes = `${mailbox.attributes.length === 0 ? "" : `\\${mailbox.attributes.join(" \\")}`}`
 				if (attributes.length > 0) attributes += " "
 
 				attributes += "\\HasNoChildren \\UnMarked"
@@ -501,6 +501,8 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 
 			if (isNaN(bytesTotal)) {
 				ctx.status(ctx.tag, "BAD", "Invalid byte count")
+
+				return
 			}
 
 			let flags: string[] = []
@@ -552,16 +554,16 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 				mailbox = rawMailbox
 			}
 
-			ctx.state = "APPENDING"
 			ctx.append = {
 				mailbox,
 				bytesTotal,
 				flags,
 				date,
-				data:      Buffer.from(""),
+				data:      new Uint8Array(),
 				tag:       ctx.tag,
 				prevState: ctx.state
 			}
+			ctx.state = "APPENDING"
 			ctx.socket.write("+ OK Ready for literal data\r\n")
 		},
 		IDLE: (ctx: CommandContext) => { // Wait for mailbox changes

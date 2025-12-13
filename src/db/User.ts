@@ -58,7 +58,7 @@ export default class User {
 	}
 
 	set name(newName: string) {
-		this.name = newName
+		this.#name = newName
 		this.save()
 	}
 
@@ -67,7 +67,7 @@ export default class User {
 	}
 
 	set username(newUsername: string) {
-		this.username = newUsername
+		this.#username = newUsername
 		this.save()
 	}
 

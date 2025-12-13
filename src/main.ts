@@ -13,9 +13,12 @@ global.debug = getConfig("debug", false) as any
 
 new Logger("DEBUG", "PINK").debug("Debugging is enabled")
 
-export const redis = await createClient({ url: getConfig("redis.url", "redis://localhost:6379/") })
+export const redis = createClient({ url: getConfig("redis.url", "redis://localhost:6379/") })
 
-redis.connect()
+await redis.connect().catch(err => {
+	new Logger("REDIS", "RED").error("Failed to connect to Redis:", err)
+	process.exit(1)
+})
 
 // export const sql = new Sequelize({
 // 	database: getConfig<string>("db.database"),
