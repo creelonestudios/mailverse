@@ -56,16 +56,23 @@ export default class SMTPServer {
 			// TODO implement regular HELO greeting
 			if (receivingData) {
 				logger.log(`Received message content: ${msg}`)
-				info.content += msg
-				if (msg === "\r\n.\r\n" || msg === "\n.\n") {
+				logger.debug(`(in HEX: ${data.toString("hex")})`)
+
+				// End of data indicator
+				// Spec says to only accept \r\n.\r\n but when testing with netcat
+				// it uses \n on linux, and it doesn't hurt to accept both
+				// Also, since a \r\n causes a new data packet usually, we also check for .\r\n and .\n
+				if (msg === "\r\n.\r\n" || msg === "\n.\n" || msg === ".\r\n" || msg === ".\n") {
 					receivingData = false
-					info.content = info.content.substring(0, info.content.length - 3).replaceAll("\r\n", "\n")
+					info.content = info.content.replaceAll("\r\n", "\n")
 					await SMTP.handleNewMail(info)
 					status(250)
 					logger.log("No longer receiving data -----------------------------------")
 
 					return
 				}
+
+				info.content += msg
 
 				return
 			}
