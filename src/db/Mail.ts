@@ -68,7 +68,6 @@ export default class Mail {
 
 	set uid(uid: number) {
 		this.#uid = uid
-		this.save()
 	}
 
 	get flags(): string[] {
@@ -77,7 +76,6 @@ export default class Mail {
 
 	set flags(flags: string[]) {
 		this.#flags = new Set(flags)
-		this.save()
 	}
 
 	get keywords(): string[] {
@@ -86,7 +84,6 @@ export default class Mail {
 
 	set keywords(keywords: string[]) {
 		this.#keywords = keywords
-		this.save()
 	}
 
 	get date(): string {

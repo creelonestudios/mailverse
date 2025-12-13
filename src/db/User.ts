@@ -59,7 +59,6 @@ export default class User {
 
 	set name(newName: string) {
 		this.#name = newName
-		this.save()
 	}
 
 	get username(): string {
@@ -68,18 +67,14 @@ export default class User {
 
 	set username(newUsername: string) {
 		this.#username = newUsername
-		this.save()
 	}
 
 	get password(): string {
 		return this.#password
 	}
 
-	set password(newPassword: string) {
-		(async () => {
-			this.#password = await hash(newPassword)
-			this.save()
-		})()
+	async setPassword(newPassword: string) {
+		this.#password = await hash(newPassword)
 	}
 
 	get mailboxes(): string[] {
@@ -88,7 +83,6 @@ export default class User {
 
 	set mailboxes(mailboxes: string[]) {
 		this.#mailboxes = mailboxes
-		this.save()
 	}
 
 }

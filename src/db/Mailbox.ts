@@ -73,7 +73,6 @@ export default class Mailbox {
 
 	set uidnext(value: number) {
 		this.#uidnext = value
-		this.save()
 	}
 
 	get uidvalidity(): number {
@@ -82,7 +81,6 @@ export default class Mailbox {
 
 	set uidvalidity(value: number) {
 		this.#uidvalidity = value
-		this.save()
 	}
 
 	get attributes(): string[] {
@@ -91,7 +89,6 @@ export default class Mailbox {
 
 	set attributes(value: string[]) {
 		this.#attributes = value
-		this.save()
 	}
 
 	get mails(): string[] {
@@ -100,7 +97,6 @@ export default class Mailbox {
 
 	set mails(value: string[]) {
 		this.#mails = value
-		this.save()
 	}
 
 }

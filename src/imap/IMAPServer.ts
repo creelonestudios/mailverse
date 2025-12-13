@@ -115,7 +115,7 @@ export default class IMAPServer {
 
 					await newMail.save()
 					mailbox.uidnext++
-					redis.set(`mail:${mailId}:content`, append.data.toString())
+					await redis.set(`mail:${mailId}:content`, append.data.toString())
 
 					mailbox.mails.push(mailId)
 					await mailbox.save()
@@ -908,7 +908,8 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 					// eslint-disable-next-line no-await-in-loop
 					const content = await mail.getContent()
 
-					redis.set(`mail:${newMailId}:content`, content)
+					// eslint-disable-next-line no-await-in-loop
+					await redis.set(`mail:${newMailId}:content`, content)
 
 					// eslint-disable-next-line no-await-in-loop
 					await newMail.save()
@@ -1008,7 +1009,8 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 					// eslint-disable-next-line no-await-in-loop
 					const content = await mail.getContent()
 
-					redis.set(`mail:${mail.uuid}:content`, content)
+					// eslint-disable-next-line no-await-in-loop
+					await redis.set(`mail:${mail.uuid}:content`, content)
 
 					// eslint-disable-next-line no-await-in-loop
 					await mail.save()
