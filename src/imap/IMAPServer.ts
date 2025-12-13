@@ -523,7 +523,7 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 					flagsStr = flagsStr.slice(1, -1)
 				}
 
-				flags = flagsStr.split(" ").map(f => f.replace("\\", ""))
+				flags = flagsStr.split(" ").map(f => (f.startsWith("\\") ? f.substring(1) : f))
 			}
 
 			if (ctx.args.length > 3) {
@@ -798,7 +798,7 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 				if (useUID) i = mail.uid
 				if (i >= startRange && i <= endRange) {
 					if (thing.toUpperCase() === "+FLAGS") {
-						const flags = items.map(flag => flag.replace("\\", ""))
+						const flags = items.map(flag => (flag.startsWith("\\") ? flag.substring(1) : flag))
 
 						logger.log(`Adding flags ${flags.join(", ")} to message ${i}`)
 
@@ -806,7 +806,7 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 
 						mail.flags = Array.from(new Set(newFlags))
 					} else if (thing.toUpperCase() === "-FLAGS") {
-						const flags = items.map(flag => flag.replace("\\", ""))
+						const flags = items.map(flag => (flag.startsWith("\\") ? flag.substring(1) : flag))
 
 						logger.log(`Removing flags ${flags.join(", ")} to message ${i}`)
 
