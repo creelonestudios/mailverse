@@ -1,11 +1,12 @@
 import sendStatus, { type StatusOptions } from "./status.js"
 import Logger from "../Logger.js"
 import SMTP from "./SMTP.js"
-import User from "../models/User.js"
+// import User from "../models/User.js"
 import getConfig from "../config.js"
 import net from "net"
 import tls from "tls"
 import { verify } from "argon2"
+import User from "../db/User.js"
 
 const logger = new Logger("SMTPServer", "GREEN")
 
@@ -55,16 +56,23 @@ export default class SMTPServer {
 			// TODO implement regular HELO greeting
 			if (receivingData) {
 				logger.log(`Received message content: ${msg}`)
-				info.content += msg
-				if (msg.endsWith(".\r\n")) {
+				logger.debug(`(in HEX: ${data.toString("hex")})`)
+
+				// End of data indicator
+				// Spec says to only accept \r\n.\r\n but when testing with netcat
+				// it uses \n on linux, and it doesn't hurt to accept both
+				// Also, since a \r\n causes a new data packet usually, we also check for .\r\n and .\n
+				if (msg === "\r\n.\r\n" || msg === "\n.\n" || msg === ".\r\n" || msg === ".\n") {
 					receivingData = false
-					info.content = info.content.substring(0, info.content.length - 3).replaceAll("\r\n", "\n")
+					info.content = info.content.replaceAll("\r\n", "\n")
 					await SMTP.handleNewMail(info)
 					status(250)
 					logger.log("No longer receiving data -----------------------------------")
 
 					return
 				}
+
+				info.content += msg
 
 				return
 			}
@@ -128,7 +136,8 @@ export default class SMTPServer {
 					return
 				}
 
-				const user = await User.findOne({ where: { username } })
+				// const user = await User.findOne({ where: { username } })
+				const user = await User.getUserFromUsername(username)
 
 				if (!user) {
 					status(550)
@@ -206,7 +215,8 @@ export default class SMTPServer {
 			return
 		}
 
-		const user = await User.findOne({ where: { username } })
+		// const user = await User.findOne({ where: { username } })
+		const user = await User.getUserFromUsername(username)
 
 		if (!user) {
 			status(535)
