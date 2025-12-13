@@ -256,7 +256,7 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 		},
 		LOGIN: async (ctx: CommandContext) => { // Spec says this should only be used as a last resort when AUTHENTICATE fails
 			// ctx.status(ctx.tag, "NO", "LOGIN not supported")
-			if (ctx.args.length != 2) {
+			if (ctx.args.length !== 2) {
 				ctx.status(ctx.tag, "BAD", "LOGIN requires 2 arguments")
 
 				return
@@ -314,7 +314,7 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 		},
 		SELECT: async (ctx: CommandContext) => { // Select mailbox
 			// ctx.status(ctx.tag, "NO", "SELECT not supported")
-			if (ctx.args.length != 1) {
+			if (ctx.args.length !== 1) {
 				ctx.status(ctx.tag, "BAD", "SELECT requires 1 argument")
 
 				return
@@ -436,7 +436,7 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 				return
 			}
 
-			const filtered = name == "*" ? mailboxes : mailboxes.filter(mb => mb.name.toUpperCase().includes(name.toUpperCase()))
+			const filtered = name === "*" ? mailboxes : mailboxes.filter(mb => mb.name.toUpperCase().includes(name.toUpperCase()))
 
 			for (const mailbox of filtered) {
 				let attributes = `${mailbox.attributes.length == 0 ? "" : `\\${mailbox.attributes.join(" \\")}`}`
@@ -471,7 +471,7 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 				return
 			}
 
-			const filtered = name == "*" ? mailboxes : mailboxes.filter(mb => mb.name.toUpperCase().includes(name.toUpperCase()))
+			const filtered = name === "*" ? mailboxes : mailboxes.filter(mb => mb.name.toUpperCase().includes(name.toUpperCase()))
 
 			for (const mailbox of filtered) {
 				let attributes = `${mailbox.attributes.length == 0 ? "" : `\\${mailbox.attributes.join(" \\")}`}`
@@ -701,7 +701,7 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 					for (const item of items) {
 						if (item.toUpperCase() === "FLAGS") {
 							// response += `FLAGS (\\${mail.flags.join(" \\")}) `
-							response += `FLAGS (${mail.flags.length == 0 ? "" : `\\${mail.flags.join(" \\")}`}) `
+							response += `FLAGS (${mail.flags.length === 0 ? "" : `\\${mail.flags.join(" \\")}`}) `
 						} else if (item.toUpperCase() === "RFC822.SIZE") {
 							response += `RFC822.SIZE ${mail.size} `
 						}
@@ -815,7 +815,7 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 						mail.flags = Array.from(new Set(newFlags))
 					}
 
-					ctx.socket.write(`* ${filteredIdx} FETCH (FLAGS (${mail.flags.length == 0 ? "" : `\\${mail.flags.join(" \\")}`}))\r\n`)
+					ctx.socket.write(`* ${filteredIdx} FETCH (FLAGS (${mail.flags.length === 0 ? "" : `\\${mail.flags.join(" \\")}`}))\r\n`)
 					// eslint-disable-next-line no-await-in-loop
 					await mail.save()
 				}
@@ -823,7 +823,7 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 				filteredIdx++
 			}
 
-			ctx.status(ctx.tag, "OK", "FETCH completed")
+			ctx.status(ctx.tag, "OK", "STORE completed")
 		},
 		COPY: async (ctx: CommandContext) => { // Copy message
 			let useUID = false
@@ -940,7 +940,7 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 				mailboxName = mailboxRaw.slice(1, -1)
 			}
 
-			logger.log(`Copying messages ${set} to mailbox ${mailboxName}`)
+			logger.log(`Moving messages ${set} to mailbox ${mailboxName}`)
 
 			// Set is a range seperated by a colon.
 			// eslint-disable-next-line prefer-const
@@ -1006,7 +1006,7 @@ const commands: { [key: string]: { [command: string]: (ctx: CommandContext) => v
 					// eslint-disable-next-line no-await-in-loop
 					const content = await mail.getContent()
 
-					redis.set(`mail:${mail.uid}:content`, content)
+					redis.set(`mail:${mail.uuid}:content`, content)
 
 					// eslint-disable-next-line no-await-in-loop
 					await mail.save()
